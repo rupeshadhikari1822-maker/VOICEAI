@@ -1,0 +1,21 @@
+# --- api ---
+fastapi>=0.115,<1.0
+uvicorn[standard]>=0.30
+pydantic>=2.7
+pydantic-settings>=2.3
+sqlalchemy>=2.0
+python-dotenv>=1.0
+
+# --- audio analysis ---
+numpy>=1.26
+scipy>=1.11          # anti-aliased resampling in export_dataset.py
+
+# --- object storage (R2 / B2 / S3 / MinIO) ---
+boto3>=1.34
+
+# --- tests ---
+httpx>=0.27          # required by fastapi.testclient
+
+# --- optional ---
+# pyloudnorm>=0.1.1  # true BS.1770 loudness for TTS export; RMS fallback if absent
+# psycopg[binary]>=3.1  # production Postgres

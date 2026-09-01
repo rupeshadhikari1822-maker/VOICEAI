@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="ne">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>आवाज रेकर्डिङ — voice.cloudfrm.ai</title>
+<link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+
+<header>
+  <span class="brand">voice<span class="accent">.cloudfrm</span>.ai</span>
+  <span class="tag">नेपाली आवाज संकलन</span>
+</header>
+
+<main>
+
+<!-- 1. consent -->
+<section class="step active" data-step="consent">
+  <h1>तपाईंको आवाज, नेपाली भाषाका लागि</h1>
+  <p class="lede">
+    यो परियोजनाले नेपाली र अन्य मातृभाषाहरूको आवाज संकलन गर्छ, ताकि कम्प्युटरले
+    हाम्रो भाषा बुझ्न र बोल्न सिकोस्। तपाईंले केही वाक्य पढ्नुहुनेछ — करिब १५–२० मिनेट।
+  </p>
+
+  <div class="spec-row">
+    <div><span>गुणस्तर</span><strong id="spec-sr">48 kHz</strong></div>
+    <div><span>चाहिने SNR</span><strong id="spec-snr">30 dB</strong></div>
+    <div><span>समय</span><strong>१५–२० मिनेट</strong></div>
+  </div>
+
+  <h2>सहमति</h2>
+  <div class="consent-box" id="consent-text">लोड हुँदैछ…</div>
+  <p class="fineprint">सहमति संस्करण: <code id="consent-version">—</code></p>
+
+  <label class="check">
+    <input type="checkbox" id="consent-agree">
+    <span>मैले माथिको सहमति पढेँ र बुझेँ। म स्वेच्छाले सहभागी हुन सहमत छु।</span>
+  </label>
+
+  <label class="check">
+    <input type="checkbox" id="consent-commercial">
+    <span>
+      मेरो आवाज व्यावसायिक उत्पादन/सेवामा पनि प्रयोग गर्न सकिन्छ।
+      <em>(वैकल्पिक — यो नछानेमा पनि तपाईं सहभागी हुन सक्नुहुन्छ।)</em>
+    </span>
+  </label>
+
+  <p class="status" id="consent-status"></p>
+  <button id="to-profile" class="primary" disabled>अगाडि बढ्नुहोस्</button>
+</section>
+
+<!-- 2. profile -->
+<section class="step" data-step="profile">
+  <h1>तपाईंको बारेमा</h1>
+  <p class="lede">
+    यी विवरण भाषिक विविधता मापन गर्न मात्र प्रयोग हुन्छन्। तपाईंको नाम, इमेल र फोन
+    कहिल्यै रेकर्डिङसँग जोडिँदैन, र डेटासेटमा जाँदैन।
+  </p>
+
+  <form id="profile-form">
+    <fieldset>
+      <legend>सम्पर्क <em>(वैकल्पिक)</em></legend>
+      <label>नाम <input name="name" autocomplete="name"></label>
+      <label>इमेल <input name="email" type="email" autocomplete="email"></label>
+      <label>फोन <input name="phone" type="tel" autocomplete="tel"></label>
+    </fieldset>
+
+    <fieldset>
+      <legend>भाषा</legend>
+      <label>रेकर्ड गर्ने भाषा
+        <select name="lang">
+          <option value="ne" selected>नेपाली</option>
+        </select>
+      </label>
+      <label>मातृभाषा
+        <select name="mother_tongue">
+          <option value="">— छान्नुहोस् —</option>
+          <option>नेपाली</option><option>मैथिली</option><option>भोजपुरी</option>
+          <option>थारू</option><option>तामाङ</option><option>नेवार</option>
+          <option>मगर</option><option>बज्जिका</option><option>डोटेली</option>
+          <option>अवधी</option><option>लिम्बू</option><option>अन्य</option>
+        </select>
+      </label>
+      <label>भाषिका / लवज <input name="language_variety" placeholder="जस्तै: पूर्वी, डोट्याली"></label>
+    </fieldset>
+
+    <fieldset>
+      <legend>क्षेत्र</legend>
+      <p class="fineprint">
+        पूरा ठेगाना सोधिँदैन। प्रदेश–जिल्ला–पालिकाले भाषिका छुट्याउन पुग्छ।
+      </p>
+      <label>प्रदेश
+        <select name="province">
+          <option value="">— छान्नुहोस् —</option>
+          <option>कोशी</option><option>मधेश</option><option>बागमती</option>
+          <option>गण्डकी</option><option>लुम्बिनी</option><option>कर्णाली</option>
+          <option>सुदूरपश्चिम</option>
+        </select>
+      </label>
+      <label>जिल्ला <input name="district"></label>
+      <label>नगरपालिका / गाउँपालिका <input name="municipality"></label>
+      <label>वडा <input name="ward" inputmode="numeric" maxlength="2"></label>
+    </fieldset>
+
+    <fieldset>
+      <legend>अन्य</legend>
+      <label>उमेर समूह
+        <select name="age_band">
+          <option value="">— छान्नुहोस् —</option>
+          <option>18-24</option><option>25-34</option><option>35-44</option>
+          <option>45-54</option><option>55-64</option><option>65+</option>
+        </select>
+      </label>
+      <label>लिङ्ग
+        <select name="gender">
+          <option value="">— छान्नुहोस् —</option>
+          <option value="female">महिला</option>
+          <option value="male">पुरुष</option>
+          <option value="other">अन्य</option>
+          <option value="prefer_not_to_say">भन्न चाहन्न</option>
+        </select>
+      </label>
+      <label>शिक्षा
+        <select name="education">
+          <option value="">— छान्नुहोस् —</option>
+          <option>प्राथमिक</option><option>माध्यमिक</option>
+          <option>स्नातक</option><option>स्नातकोत्तर वा माथि</option>
+        </select>
+      </label>
+
+      <label class="sensitive">
+        जात / जातीयता <em>(वैकल्पिक — नभने पनि हुन्छ)</em>
+        <input name="caste_ethnicity" placeholder="भन्न चाहनुहुन्न भने खाली छोड्नुहोस्">
+        <small>
+          यो संवेदनशील व्यक्तिगत सूचना हो (व्यक्तिगत गोपनीयता ऐन २०७५, दफा २७(२))।
+          यो रेकर्डिङसँग जोडिँदैन र डेटासेटमा कहिल्यै जाँदैन।
+        </small>
+      </label>
+    </fieldset>
+
+    <p class="status" id="profile-status"></p>
+    <button type="submit" class="primary" id="profile-submit">माइक जाँच्नुहोस्</button>
+  </form>
+</section>
+
+<!-- 3. mic check -->
+<section class="step" data-step="miccheck">
+  <h1>माइक जाँच</h1>
+  <p class="fineprint">तपाईंको पहिचान नम्बर: <code id="speaker-id">—</code></p>
+
+  <ol class="rules">
+    <li>सानो, नरम कोठा रोज्नुहोस् — ओछ्यान र पर्दा भएको कोठा ठूलो खाली हल भन्दा राम्रो।</li>
+    <li>झ्याल–ढोका बन्द गर्नुहोस्। पंखा, AC, कुलर र TV निभाउनुहोस्।</li>
+    <li>फोन <strong>साइलेन्ट</strong> गर्नुहोस् — भाइब्रेट होइन।</li>
+    <li>माइक मुखबाट १५–२० सेमी टाढा, अलि छेउतिर राख्नुहोस्।</li>
+    <li>तार भएको हेडसेट प्रयोग गर्नुहोस्। <strong>ब्लुटुथ नचलाउनुहोस्।</strong></li>
+    <li>स्वाभाविक गतिमा बोल्नुहोस् — समाचार वाचक जसरी नपढ्नुहोस्।</li>
+  </ol>
+
+  <div class="meter"><div class="meter-fill" id="meter-fill"></div></div>
+  <p class="meter-label" id="meter-label">— dBFS</p>
+
+  <div class="spec-row">
+    <div><span>माइक</span><strong id="mic-name">—</strong></div>
+    <div><span>दर</span><strong id="mic-rate">—</strong></div>
+    <div><span>कोठाको आवाज</span><strong id="room-floor">—</strong></div>
+  </div>
+
+  <ul class="problems" id="mic-problems"></ul>
+  <p class="status" id="mic-status"></p>
+
+  <div class="row">
+    <button id="mic-start" class="primary">माइक खोल्नुहोस्</button>
+    <button id="mic-quiet" disabled>५ सेकेन्ड चुप जाँच</button>
+    <button id="to-record" class="primary" disabled>रेकर्डिङ सुरु</button>
+  </div>
+</section>
+
+<!-- 4. record -->
+<section class="step" data-step="record">
+  <div class="record-head">
+    <span id="prompt-counter">— / —</span>
+    <span>पठाइएको: <strong id="pass-count">0</strong></span>
+  </div>
+
+  <div class="prompt" id="prompt-text">—</div>
+
+  <div class="meter"><div class="meter-fill" id="meter-fill-2"></div></div>
+  <p class="timer" id="timer">0.0s</p>
+
+  <button id="record-toggle" class="record">रेकर्ड गर्नुहोस्</button>
+
+  <div class="metrics" id="metrics"></div>
+  <p class="status" id="record-status"></p>
+
+  <div id="playback" class="hidden">
+    <audio id="playback-audio" controls></audio>
+  </div>
+
+  <div class="row">
+    <button id="retake" disabled>फेरि रेकर्ड</button>
+    <button id="accept" class="primary" disabled>पठाउनुहोस्</button>
+  </div>
+
+  <p class="fineprint">
+    बोल्नु अघि र सकेपछि आधा सेकेन्ड पर्खनुहोस्। हरेक वाक्य ४–१० सेकेन्डको हुनुपर्छ।
+  </p>
+</section>
+
+<!-- 5. done -->
+<section class="step" data-step="done">
+  <h1>धन्यवाद 🙏</h1>
+  <p class="lede">
+    तपाईंले <strong id="done-count">0</strong> वाक्य रेकर्ड गर्नुभयो। यो आवाज नेपाली
+    भाषाका लागि प्रयोग हुनेछ।
+  </p>
+  <p class="fineprint">
+    तपाईंको पहिचान नम्बर: <code id="done-speaker">—</code><br>
+    डेटा हटाउन चाहनुभयो भने यही नम्बर सहित सम्पर्क गर्नुहोस्।
+  </p>
+</section>
+
+</main>
+
+<footer>© 2026 CloudFARM · <span class="accent">Powered by the Himalayas</span></footer>
+
+<script type="module" src="/static/recorder.js"></script>
+</body>
+</html>
