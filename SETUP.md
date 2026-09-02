@@ -45,16 +45,25 @@ pip install -r requirements.txt
 cp .env.example .env
 python scripts/init_db.py          # runs `alembic upgrade head`
 python scripts/import_prompts.py data/prompts_ne.jsonl
-python scripts/smoke_test.py       # should print "smoke test passed"
+pytest -q                          # 102 tests
 uvicorn app.main:app --reload
 ```
 
 Open <http://localhost:8000>. `STORAGE_BACKEND=local` means no cloud account is
 needed to try it — files land in `./storage_local/`.
 
-The smoke test runs in its own sandbox (temp SQLite + temp storage directory),
-so it never touches your working database and leaves nothing behind. It wraps
-pytest, so `python scripts/smoke_test.py -k review -v` works too.
+`pytest -q` is the test suite: 102 tests covering audio QC, the upload flow,
+privacy guarantees, split discipline, the review pass, and the production
+startup guard. `pytest -k review -v` runs a subset.
+
+`python scripts/smoke_test.py` runs the same suite and prints "smoke test
+passed". It exists for the deployment notes and muscle memory that still name
+it, and passes arguments through to pytest.
+
+Either way the tests run in their own sandbox — a temp SQLite file and a temp
+storage directory, set up before any app module is imported — so they never
+touch your working database and leave nothing behind. Safe to run on the
+production box.
 
 ### Schema changes use Alembic
 

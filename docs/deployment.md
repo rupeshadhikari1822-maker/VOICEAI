@@ -192,7 +192,8 @@ On R2 this needs `GET` added to the CORS policy alongside `PUT`:
       the dataset commercially — the commercial-use opt-in **cannot** be
       retro-fitted
 - [ ] `CONSENT_VERSION` matches the consent text actually in the repo
-- [ ] `python scripts/smoke_test.py` passes on the deployed machine
+- [ ] `pytest -q` passes on the deployed machine (it sandboxes itself to a
+      temp database and storage directory, so it is safe to run there)
 - [ ] Bucket versioning or a second copy in B2, so a bad script cannot delete
       the masters
 - [ ] A named person who can action `scripts/withdraw.py` within a few days

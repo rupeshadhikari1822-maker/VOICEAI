@@ -200,3 +200,24 @@ def test_backup_copies_corpus_audio_but_not_probes(tmp_path):
     assert (tmp_path / "raw/ne/BACKUPTEST/SES/CLIP.wav").is_file()
     assert not (tmp_path / "_preflight").exists(), "probes must not be archived"
     assert not (tmp_path / "derived").exists(), "derived/ rebuilds from raw/"
+
+
+# --- structure ----------------------------------------------------------
+
+
+def test_app_root_holds_only_the_entry_point():
+    """Every module belongs to core/, api/, models/, schemas/ or services/.
+
+    A file loose in app/ is a sign someone could not decide which concern it
+    served. This is the moment to decide, not defer -- the last stray was a
+    compatibility shim that outlived its own justification and left two import
+    paths for one thing with no rule about which to use.
+    """
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parent.parent / "app"
+    loose = sorted(p.name for p in root.glob("*.py"))
+    assert loose == ["__init__.py", "main.py"], (
+        f"unexpected module(s) in app/ root: {loose}. "
+        "Move it into core/, api/, models/, schemas/ or services/."
+    )

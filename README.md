@@ -151,8 +151,8 @@ Design decisions in this repo that follow from that:
    *before* recording. Retro-fitting that consent later is not possible.
 
 The export is built from `Speaker.export_row()`, a fixed list of non-identifying
-fields. There is no flag that turns PII back on, and `scripts/smoke_test.py`
-asserts that name, email, phone and caste never appear in an export row.
+fields. There is no flag that turns PII back on, and the test suite asserts
+that name, email, phone and caste never appear in an export row.
 
 I am not your lawyer. For a dataset you intend to license commercially, have a
 Nepali lawyer review `docs/consent-ne.md` before your first session.
@@ -193,12 +193,17 @@ pip install -r requirements.txt
 cp .env.example .env                                   # fill in R2 keys
 python scripts/init_db.py                              # alembic upgrade head
 python scripts/import_prompts.py data/prompts_ne.jsonl
-python scripts/smoke_test.py                           # should print "smoke test passed"
+pytest -q                                              # 102 tests
 uvicorn app.main:app --reload
 ```
 
 Open <http://localhost:8000>. For local development with no cloud account,
 leave `STORAGE_BACKEND=local` and files land in `./storage_local/`.
+
+`pytest -q` is the test suite. `python scripts/smoke_test.py` runs the same
+tests and prints "smoke test passed"; it exists because deployment notes and
+muscle memory still reference it, and it takes arguments through to pytest
+(`python scripts/smoke_test.py -k review -v`).
 
 Microphone access requires a secure context. On localhost that works; on a real
 device you must serve over HTTPS. Use `cloudflared tunnel --url http://localhost:8000`

@@ -42,7 +42,7 @@ and Postgres in production.
    well as updating `Clip.verify_status`. Never update or delete an event -- a
    changed verdict is a new row. Undo is scoped to the caller's own last one.
 
-The `tests/` suite asserts rules 3, 4, 5 and 6. If you change any of them,
+The `tests/` suite (`pytest -q`) asserts rules 3, 4, 5 and 6. If you change any of them,
 that test should fail — if it doesn't, the test is wrong too.
 
 ## Layout
@@ -75,8 +75,12 @@ deploy/                   Caddyfile, systemd unit, bootstrap.sh, production env 
 ```
 
 Import from the package, not the module: `from app.models import Clip`,
-`from app.services.storage import get_storage, raw_key`. `app/storage.py` is a
-deprecated shim kept for older references.
+`from app.services.storage import get_storage, raw_key`.
+
+**`app/` root contains `main.py` and `__init__.py` and nothing else.** Every
+module belongs to `core/`, `api/`, `models/`, `schemas/` or `services/`. A file
+loose in `app/` means someone could not decide which concern it served; decide
+then, rather than deferring. A test enforces this.
 
 ## Commands
 
@@ -84,7 +88,8 @@ deprecated shim kept for older references.
 python scripts/init_db.py                      # alembic upgrade head
 python scripts/init_db.py --stamp              # pre-Alembic DB: mark, don't replay
 python scripts/import_prompts.py data/prompts_ne.jsonl
-python scripts/smoke_test.py                   # wraps pytest; -k to filter
+pytest -q                                      # the test suite (102 tests)
+python scripts/smoke_test.py                   # same thing, older entry point
 uvicorn app.main:app --reload
 python scripts/qc_report.py
 python scripts/export_dataset.py --format asr --sr 16000 --out export_out/asr
