@@ -5,7 +5,10 @@ from pathlib import Path
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-BASE_DIR = Path(__file__).resolve().parent.parent
+# Repo root: this file is app/core/config.py, so go up three levels.
+# Keep this in step with the file's location -- everything that resolves
+# static/, docs/ and the default SQLite path hangs off it.
+BASE_DIR = Path(__file__).resolve().parents[2]
 
 
 class Settings(BaseSettings):

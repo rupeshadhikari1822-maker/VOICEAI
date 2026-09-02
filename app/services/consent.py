@@ -11,7 +11,7 @@ from __future__ import annotations
 import hashlib
 from functools import lru_cache
 
-from app.config import get_settings
+from app.core.config import get_settings
 
 _CONSENT_FILE = "docs/consent-ne.md"
 

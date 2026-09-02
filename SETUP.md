@@ -43,7 +43,7 @@ python -m venv .venv
 source .venv/bin/activate          # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 cp .env.example .env
-python scripts/init_db.py
+python scripts/init_db.py          # runs `alembic upgrade head`
 python scripts/import_prompts.py data/prompts_ne.jsonl
 python scripts/smoke_test.py       # should print "smoke test passed"
 uvicorn app.main:app --reload
@@ -53,7 +53,22 @@ Open <http://localhost:8000>. `STORAGE_BACKEND=local` means no cloud account is
 needed to try it — files land in `./storage_local/`.
 
 The smoke test runs in its own sandbox (temp SQLite + temp storage directory),
-so it never touches your working database and leaves nothing behind.
+so it never touches your working database and leaves nothing behind. It wraps
+pytest, so `python scripts/smoke_test.py -k review -v` works too.
+
+### Schema changes use Alembic
+
+`scripts/init_db.py` runs `alembic upgrade head`. Run it after every `git pull`,
+not just on first setup — `create_all()` would create missing *tables* but never
+add a *column* to a table that already exists, so a new field would silently not
+be there and inserts would fail with `no such column`.
+
+If you have a database from before Alembic was added, mark it as being at the
+baseline instead of replaying the baseline over your live tables:
+
+```bash
+python scripts/init_db.py --stamp
+```
 
 ## 4. Claude Code
 

@@ -62,7 +62,7 @@ export class Recorder {
     });
     this.sampleRate = this.context.sampleRate;
 
-    await this.context.audioWorklet.addModule('/static/pcm-worklet.js');
+    await this.context.audioWorklet.addModule('/static/recorder/pcm-worklet.js');
 
     this.source = this.context.createMediaStreamSource(this.stream);
     this.node = new AudioWorkletNode(this.context, 'pcm-recorder', {

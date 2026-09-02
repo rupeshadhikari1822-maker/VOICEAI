@@ -6,7 +6,7 @@
  * link and start recording; a framework bundle works against that.
  */
 
-import { Recorder, encodeWav, analyze, gate, dbfs } from '/static/audio.js';
+import { Recorder, encodeWav, analyze, gate, dbfs } from '/static/recorder/audio.js';
 
 const $ = (sel) => document.querySelector(sel);
 const $$ = (sel) => Array.from(document.querySelectorAll(sel));

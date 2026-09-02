@@ -27,7 +27,7 @@ decide whether the corpus is usable for training:
 
 ```
                   ┌──────────────────────────────────────────┐
-   contributor    │  Browser recorder  (static/)             │
+   contributor    │  Browser recorder  (static/recorder/)    │
    opens link  ──▶│  AudioWorklet → Float32 → WAV 48k/16/mono│
                   │  live level meter + client-side QC       │
                   └──────────┬───────────────────┬───────────┘
@@ -70,8 +70,8 @@ Sizing, so the cost is concrete: 48 kHz / 16-bit / mono WAV = **345 MB per hour*
 of audio. 500 hours ≈ 173 GB ≈ **$2.60/month on R2**. Storage is not your cost
 problem; speaker recruitment is.
 
-The storage layer in `app/storage.py` is a thin `boto3` S3 adapter, so R2, B2,
-Wasabi, Supabase and local MinIO all work by changing three env vars.
+The storage layer in `app/services/storage/` is a thin `boto3` S3 adapter, so
+R2, B2, Wasabi, Supabase and local MinIO all work by changing three env vars.
 
 **Object key layout** (never put a name or phone number in a key):
 
@@ -191,7 +191,7 @@ prompt produces a bad transcript, and a bad transcript is worse than no data.
 python -m venv .venv && source .venv/bin/activate     # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 cp .env.example .env                                   # fill in R2 keys
-python scripts/init_db.py
+python scripts/init_db.py                              # alembic upgrade head
 python scripts/import_prompts.py data/prompts_ne.jsonl
 python scripts/smoke_test.py                           # should print "smoke test passed"
 uvicorn app.main:app --reload

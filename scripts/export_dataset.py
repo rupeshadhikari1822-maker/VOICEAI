@@ -36,10 +36,10 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from scripts._console import use_utf8  # noqa: E402
 
-from app.audio_qc import decode_wav  # noqa: E402
-from app.db import SessionLocal  # noqa: E402
+from app.services.audio_qc import decode_wav  # noqa: E402
+from app.core.db import SessionLocal  # noqa: E402
 from app.models import Clip, Speaker  # noqa: E402
-from app.storage import StorageError, get_storage  # noqa: E402
+from app.services.storage import StorageError, get_storage  # noqa: E402
 
 FORMAT_DEFAULTS = {
     "asr": 16000,

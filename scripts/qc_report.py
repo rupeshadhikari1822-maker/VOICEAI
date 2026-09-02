@@ -19,7 +19,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from scripts._console import use_utf8  # noqa: E402
 
-from app.db import SessionLocal  # noqa: E402
+from app.core.db import SessionLocal  # noqa: E402
 from app.models import Clip, Prompt, Speaker  # noqa: E402
 
 

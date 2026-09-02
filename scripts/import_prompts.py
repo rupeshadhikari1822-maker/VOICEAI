@@ -21,7 +21,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from scripts._console import use_utf8  # noqa: E402
 
-from app.db import SessionLocal, create_all  # noqa: E402
+from app.core.db import SessionLocal, create_all  # noqa: E402
 from app.models import Prompt  # noqa: E402
 
 # The seed corpus has been reviewed; other languages have not.

@@ -24,41 +24,64 @@ and Postgres in production.
    information under Nepal's Individual Privacy Act 2075 s.27(2). The export
    path goes through `Speaker.export_row()`, which cannot reach it.
 5. **Server-side QC is authoritative.** Client metrics are a UX convenience;
-   `app/audio_qc.py` re-reads the stored bytes and decides pass/fail.
+   `app/services/audio_qc/` re-reads the stored bytes and decides pass/fail.
 6. **Splits are speaker-disjoint.** Never let one voice appear in both train
    and test. `assign_splits()` assigns whole speakers, never individual clips.
 
-`scripts/smoke_test.py` asserts rules 3, 4, 5 and 6. If you change any of them,
+The `tests/` suite asserts rules 3, 4, 5 and 6. If you change any of them,
 that test should fail — if it doesn't, the test is wrong too.
 
 ## Layout
 
+Grouped by concern. One folder per area of responsibility; one file per table,
+per resource, per backend. Keep files under ~250 lines and single-concern.
+
 ```
-app/main.py       FastAPI routes
-app/models.py     SQLAlchemy schema (privacy boundary lives here)
-app/storage.py    S3/local adapter, presigned PUT, key layout
-app/audio_qc.py   SNR, peak, clipping, silence analysis — authoritative
-app/config.py     env-driven settings
-app/consent.py    consent text loading + SHA-256
-app/ids.py        ULIDs, no dependency
-static/           recorder UI (index.html, recorder.js, audio.js, pcm-worklet.js)
-scripts/          init_db, import_prompts, export_dataset, qc_report, withdraw, smoke_test
-data/             prompt JSONL files
-docs/             recording guide, consent text, deployment
+app/
+  main.py                 app factory + wiring ONLY (no business logic)
+  core/                   config, db session, ULIDs, security
+  models/                 one module per table; __init__ re-exports them all
+  schemas/                one module per resource; common.py for shared shapes
+  api/
+    deps.py               shared Depends(): get_db, get_thresholds, pagination
+    routes/               one module per resource; __init__ builds the parent router
+  services/               domain logic, no FastAPI imports
+    audio_qc/             metrics.py (physics) | thresholds.py (policy) | gate.py (messages)
+    storage/              base.py | keys.py | local.py | s3.py; __init__ picks the backend
+    consent.py
+static/
+  recorder/               the contributor UI
+  review/                 the validation UI
+  shared/                 helpers used by both
+migrations/               Alembic; versions/0001_baseline_schema.py is the baseline
+tests/                    pytest; conftest.py sandboxes DB + storage before app import
+scripts/                  thin operational entry points
 ```
 
-`static/audio.js` holds capture + WAV encoding + client QC.
-`static/recorder.js` holds only the step flow and API calls.
+Import from the package, not the module: `from app.models import Clip`,
+`from app.services.storage import get_storage, raw_key`. `app/storage.py` is a
+deprecated shim kept for older references.
 
 ## Commands
 
 ```bash
-python scripts/init_db.py
+python scripts/init_db.py                      # alembic upgrade head
+python scripts/init_db.py --stamp              # pre-Alembic DB: mark, don't replay
 python scripts/import_prompts.py data/prompts_ne.jsonl
-python scripts/smoke_test.py
+python scripts/smoke_test.py                   # wraps pytest; -k to filter
 uvicorn app.main:app --reload
 python scripts/qc_report.py
 python scripts/export_dataset.py --format asr --sr 16000 --out export_out/asr
+```
+
+**Schema changes go through Alembic, never `create_all()`.** `create_all()` adds
+missing tables but never adds a column to an existing one, so a new model field
+silently does not exist on any database that has already run, and every insert
+fails at runtime with `no such column`.
+
+```bash
+alembic revision --autogenerate -m "what changed"
+alembic upgrade head
 ```
 
 ## Conventions
@@ -70,6 +93,10 @@ python scripts/export_dataset.py --format asr --sr 16000 --out export_out/asr
   change (move the mic, close the window), not what the code did.
 - Scripts print Nepali, so call `use_utf8()` from `scripts/_console.py` at the
   top of `main()` — Windows consoles default to cp1252 and will raise otherwise.
+- Route modules stay about their own resource; anything shared goes in
+  `app/api/deps.py`. Services never import FastAPI.
+- `BASE_DIR` in `app/core/config.py` is `parents[2]`. If that file ever moves,
+  fix it — everything resolving `static/` and `docs/` hangs off it.
 
 ## Good next tasks
 
