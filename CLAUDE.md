@@ -64,6 +64,7 @@ static/
 migrations/               Alembic; versions/0001_baseline_schema.py is the baseline
 tests/                    pytest; conftest.py sandboxes DB + storage before app import
 scripts/                  thin operational entry points
+deploy/                   Caddyfile, systemd unit, bootstrap.sh, production env template
 ```
 
 Import from the package, not the module: `from app.models import Clip`,
@@ -82,7 +83,11 @@ python scripts/qc_report.py
 python scripts/export_dataset.py --format asr --sr 16000 --out export_out/asr
 python scripts/asr_prefilter.py --dry-run       # optional; shrinks the review queue
 python scripts/prompt_health.py                 # prompts several people misread
+python scripts/check_deployment.py https://record.cloudfrm.ai
 ```
+
+Deployment target is **record.cloudfrm.ai** (the studio). `voice.cloudfrm.ai` is
+the separate static landing page. Runbook: `deploy/README.md`.
 
 **Schema changes go through Alembic, never `create_all()`.** `create_all()` adds
 missing tables but never adds a column to an existing one, so a new model field

@@ -1,0 +1,43 @@
+# systemd unit for the recording studio.
+# Install to /etc/systemd/system/voice-recorder.service
+
+[Unit]
+Description=voice.cloudfrm.ai recording studio
+Documentation=https://github.com/rupeshadhikari1822-maker/VOICEAI
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=exec
+User=voice
+Group=voice
+WorkingDirectory=/srv/voice
+EnvironmentFile=/srv/voice/.env
+
+# Audio never passes through this process on the S3 backend -- the browser
+# PUTs straight to the bucket -- so two workers serve far more contributors
+# than this project will have. Raise it only if /api/config latency climbs.
+ExecStart=/srv/voice/.venv/bin/uvicorn app.main:app \
+    --host 127.0.0.1 \
+    --port 8000 \
+    --workers 2 \
+    --proxy-headers \
+    --forwarded-allow-ips 127.0.0.1
+
+Restart=always
+RestartSec=3
+
+# --- hardening -------------------------------------------------------
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+# The app writes only its SQLite file and, on the local backend, storage_local.
+ReadWritePaths=/srv/voice
+
+[Install]
+WantedBy=multi-user.target

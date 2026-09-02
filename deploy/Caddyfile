@@ -1,0 +1,44 @@
+# Caddy config for record.cloudfrm.ai
+#
+# Install to /etc/caddy/Caddyfile, then: sudo systemctl reload caddy
+#
+# Caddy obtains and renews the TLS certificate on its own, but only once the
+# A record for this name already resolves to this box. If DNS is not in place
+# first, the ACME challenge fails and you wait out a retry backoff in the
+# middle of the deploy. Create the A record before you get here.
+
+record.cloudfrm.ai {
+	reverse_proxy 127.0.0.1:8000
+
+	encode zstd gzip
+
+	# Microphone capture requires a secure context, which is the entire reason
+	# this app cannot be served over plain HTTP to a real contributor.
+	header {
+		# Caddy does not send HSTS by default.
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		# The recorder needs the mic; nothing here needs camera or geolocation.
+		Permissions-Policy "microphone=(self), camera=(), geolocation=()"
+		X-Frame-Options "DENY"
+		-Server
+	}
+
+	# Only matters when STORAGE_BACKEND=local, where clip bytes pass through
+	# this proxy. On S3/R2 the browser PUTs straight to the bucket and nothing
+	# large ever reaches Caddy.
+	request_body {
+		max_size 50MB
+	}
+
+	log {
+		output file /var/log/caddy/record.cloudfrm.ai.log {
+			roll_size 20mb
+			roll_keep 10
+		}
+		# Do not log query strings: presigned upload/download URLs and reviewer
+		# tokens both travel in them.
+		format json
+	}
+}

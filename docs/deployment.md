@@ -1,5 +1,9 @@
 # Deployment
 
+> **For record.cloudfrm.ai specifically, follow [`deploy/README.md`](../deploy/README.md).**
+> It has the ordered runbook, a bootstrap script, and the Caddy/systemd files.
+> This page is the background: what the pieces are and why.
+
 One Python process plus a bucket. No queue, no orchestration — the bottleneck in
 this project is recruiting speakers, not scaling servers, and every piece of
 infrastructure you add is one more thing to keep running while you do the hard
