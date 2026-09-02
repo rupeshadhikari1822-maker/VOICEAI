@@ -19,5 +19,12 @@ pytest>=8.0
 httpx>=0.27          # required by fastapi.testclient
 
 # --- optional ---
-# pyloudnorm>=0.1.1  # true BS.1770 loudness for TTS export; RMS fallback if absent
+# pyloudnorm>=0.1.1     # true BS.1770 loudness for TTS export; RMS fallback if absent
 # psycopg[binary]>=3.1  # production Postgres
+#
+# ASR pre-filter (scripts/asr_prefilter.py). Optional by design: without it,
+# every QC-passing clip simply goes to a human and /review works unchanged.
+# faster-whisper>=1.0
+#
+# jiwer is NOT required: CER is implemented in app/services/review/normalize.py
+# so that the code deciding auto-reject is testable in the base install.

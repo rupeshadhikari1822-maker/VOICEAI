@@ -17,7 +17,7 @@ from __future__ import annotations
 import logging
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
-from fastapi.responses import JSONResponse
+from fastapi.responses import FileResponse, JSONResponse
 from sqlalchemy.orm import Session
 
 from app import schemas
@@ -155,3 +155,30 @@ async def local_upload(
 
     storage.put_bytes(key, body)
     return JSONResponse({"ok": True, "bytes": len(body)})
+
+
+@router.get("/api/_local_download", include_in_schema=False)
+def local_download(
+    key: str = Query(...),
+    expires: int = Query(...),
+    sig: str = Query(...),
+):
+    """Stands in for a presigned S3 GET when STORAGE_BACKEND=local.
+
+    Used by the review UI for playback. On S3 the browser fetches the bucket
+    directly and this route is never reached.
+    """
+    storage = get_storage()
+    if not isinstance(storage, LocalStorage):
+        raise HTTPException(404, "not found")
+    if not storage.verify(key, expires, sig):
+        raise HTTPException(403, "invalid or expired download signature")
+
+    try:
+        path = storage.local_path(key)
+    except StorageError:
+        raise HTTPException(400, "unsafe object key")
+    if not path.is_file():
+        raise HTTPException(404, "object not found")
+
+    return FileResponse(path, media_type="audio/wav")

@@ -13,6 +13,14 @@ WAV_CONTENT_TYPE = "audio/wav"
 
 
 @dataclass
+class PresignedTarget:
+    """A short-lived URL the browser can fetch directly."""
+
+    url: str
+    expires_at: int
+
+
+@dataclass
 class PresignedUpload:
     url: str
     method: str
@@ -29,6 +37,15 @@ class BaseStorage:
     def presign_put(
         self, key: str, content_type: str = WAV_CONTENT_TYPE
     ) -> PresignedUpload:
+        raise NotImplementedError
+
+    def presign_get(self, key: str, ttl_s: int | None = None) -> PresignedTarget:
+        """A short-lived URL for reading one object.
+
+        Used by the review UI for playback. Audio must never be streamed through
+        the API process -- that would put the whole corpus through one server and
+        undo the direct-to-storage design.
+        """
         raise NotImplementedError
 
     def get_bytes(self, key: str) -> bytes:

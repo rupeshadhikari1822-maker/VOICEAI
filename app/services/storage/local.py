@@ -18,6 +18,7 @@ from app.core.config import Settings
 from app.services.storage.base import (
     WAV_CONTENT_TYPE,
     BaseStorage,
+    PresignedTarget,
     PresignedUpload,
     StorageError,
 )
@@ -60,6 +61,26 @@ class LocalStorage(BaseStorage):
             key=key,
             expires_at=expires_at,
         )
+
+    def presign_get(self, key: str, ttl_s: int | None = None) -> PresignedTarget:
+        """Signed download URL, mirroring the presigned-PUT shape."""
+        ttl = ttl_s if ttl_s is not None else self.settings.presign_get_ttl_s
+        expires_at = int(time.time()) + ttl
+        query = urlencode(
+            {"key": key, "expires": expires_at, "sig": self.sign(key, expires_at)}
+        )
+        base = self.settings.public_base_url.rstrip("/")
+        return PresignedTarget(
+            url=f"{base}/api/_local_download?{query}", expires_at=expires_at
+        )
+
+    def local_path(self, key: str) -> Path:
+        """On-disk location for a key. Dev-only; S3 has no equivalent.
+
+        Exists so the local download route can hand the file to FileResponse
+        instead of reading the whole clip into memory.
+        """
+        return self._path(key)
 
     def get_bytes(self, key: str) -> bytes:
         path = self._path(key)

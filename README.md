@@ -217,16 +217,88 @@ Export formats: `asr`, `tts`, `hf` (HuggingFace `datasets`), `ljspeech`. Every
 export writes a `DATASET_CARD.md` recording the split seed, speaker counts and
 a speaker-disjointness check.
 
-## 9. Roadmap
+## 9. Validation: the `/review` pass
+
+Automated QC catches noise, clipping and level. It **cannot catch a clean
+misread** — someone saying the wrong word, clearly, at a good level. That is what
+this pass is for.
+
+The constraint is reviewer throughput, not visual polish. Listening end to end
+runs about 1.2× realtime, so 50 hours of corpus is 60+ hours of human labour, and
+that is the wall these projects hit. Three things attack it:
+
+**1. ASR pre-filter — the biggest lever.** You already know the target text, so
+this is far easier than open transcription: transcribe, compute character error
+rate against `prompt_text`, then auto-verify below 0.10, auto-reject above 0.40,
+and send only the ambiguous middle to a human. Typically removes 60-80% of the
+queue.
+
+```bash
+pip install faster-whisper          # optional
+python scripts/asr_prefilter.py --dry-run
+python scripts/asr_prefilter.py --limit 500
+```
+
+Batch and resumable; transcription never happens inside a request. Without
+`faster-whisper` installed the script exits with a message and `/review` works
+exactly the same — the human path never depends on the optional path.
+
+**2. Queue policy.** Not "the next unverified clip". Every one of a speaker's
+first 20 clips is reviewed; after that a clean speaker drops to 10% sampling and
+snaps back to 100% if their rejection rate climbs. Speaker quality is strongly
+autocorrelated — good readers stay good. Clips are ordered by ASR uncertainty,
+prompts that others have already rejected surface together, and consecutive
+clips never come from the same speaker (reviewers habituate to a voice and stop
+hearing errors in it).
+
+**3. Keyboard-only UI.** `Space` play/pause · `R` replay · `Enter` verify ·
+`1`-`9` reject reasons · `S` skip · `U` unsure · `Z` undo. The next three clips
+are prefetched so playback is instant.
+
+**QC metrics and the ASR transcript are hidden until after the verdict.**
+Showing "SNR 42 dB" next to the play button anchors the reviewer into passing it;
+showing the ASR text means they review the transcript rather than the audio. Both
+appear immediately afterwards, where they are useful for auditing the call.
+
+### Structured reject reasons
+
+`misread` · `wrong_word` · `partial` · `extra_speech` · `background_event` ·
+`hesitation` · `wrong_language` · `bad_prompt` · `other`
+
+Free text cannot be aggregated; these can, and that is the payoff:
+
+```bash
+python scripts/prompt_health.py --deactivate
+```
+
+If five different speakers misread `ne-0032`, the prompt is ambiguous, not the
+speakers — numerals are the usual culprit. `--deactivate` takes it out of
+rotation, but only with at least 5 **distinct speakers** behind the verdict.
+
+### Reviewer access
+
+```bash
+REVIEWER_TOKENS=alice:tok1,bob:tok2
+```
+
+Then open `/review?token=tok1`. This is staff-grade auth, not a public identity
+system — see `docs/deployment.md`. Every verdict is attributed, which is what
+makes agreement measurable and a bad session revertible.
+
+Verdicts are append-only: `Clip.verify_status` holds the current state and a
+`ReviewEvent` records how it got there. A column that gets overwritten cannot
+answer "who rejected this, and when".
+
+```bash
+python scripts/export_dataset.py --format asr --verified-only --out export_out/asr
+```
+
+## 10. Roadmap
 
 - [x] Recorder, QC, storage, export
-- [ ] Validation UI (a second person listens and approves/rejects clips)
-- [ ] Forced alignment (MFA) to catch misreads automatically
+- [x] Validation UI (a second person listens and approves/rejects clips)
+- [x] ASR pre-filter to shrink the human queue
+- [ ] Forced alignment (MFA) for word-level timing on ambiguous clips
+- [ ] Second-opinion sampling to measure inter-reviewer agreement in practice
 - [ ] Speaker dashboard with contribution count
 - [ ] Offline PWA mode for field recording without connectivity
-
-Automated QC catches noise and clipping but **cannot catch a misread** — someone
-saying the wrong word, cleanly. That is what the validation pass is for, and it
-is the most valuable thing to build next. The `clips` table already carries
-`verify_status` / `verified_by` / `verified_at`, and `export_dataset.py` already
-supports `--verified-only`; what is missing is the `/review` UI.

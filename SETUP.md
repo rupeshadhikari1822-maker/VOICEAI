@@ -70,6 +70,21 @@ baseline instead of replaying the baseline over your live tables:
 python scripts/init_db.py --stamp
 ```
 
+### Try the review UI
+
+```bash
+REVIEWER_TOKENS=me:local-dev-token uvicorn app.main:app --reload
+```
+
+Open <http://localhost:8000/review?token=local-dev-token>. Without
+`REVIEWER_TOKENS` set, `/review` returns 401 and everything else works normally.
+
+Optionally shrink the queue first (needs `pip install faster-whisper`):
+
+```bash
+python scripts/asr_prefilter.py --dry-run
+```
+
 ## 4. Claude Code
 
 ```bash
@@ -84,9 +99,9 @@ splits) automatically.
 
 Useful first prompts:
 
-- `Build a /review page where a second person listens to clips flagged 'passed' and marks them verified or rejected. Follow the rules in CLAUDE.md.`
 - `Add resumable sessions: a signed link that lets a speaker return later and continue where they left off.`
 - `Add rate limiting to /api/speakers and /api/clips/init.`
+- `Route 5% of already-settled clips back into the review queue for a second opinion, so the agreement rate in /api/review/stats is based on real overlap.`
 
 ## 5. Get a public HTTPS link for testing
 

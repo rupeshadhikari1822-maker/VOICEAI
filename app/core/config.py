@@ -44,9 +44,50 @@ class Settings(BaseSettings):
     # "asr" -> 30 dB, "tts" -> 40 dB.
     qc_profile: str = "asr"
 
+    # --- review: auth -------------------------------------------------
+    # Named staff tokens, "alice:tok1,bob:tok2". Reviewers are trusted staff,
+    # not the public; this is deliberately not an identity system.
+    reviewer_tokens: str = ""
+    # Playback URLs are short-lived. The bucket stays private -- a review UI is
+    # the easiest place to accidentally make a corpus public.
+    presign_get_ttl_s: int = 300
+
+    # --- review: ASR pre-filter ---------------------------------------
+    # Thresholds are per-language in practice: a normaliser that is slightly off
+    # for a script will shift CER for every clip in it, so these are configurable
+    # rather than baked in.
+    asr_model: str = "small"
+    asr_auto_verify_cer: float = 0.10
+    asr_auto_reject_cer: float = 0.40
+
+    # --- review: queue policy -----------------------------------------
+    # Review every one of a speaker's first N clips, then sample, because
+    # speaker quality is strongly autocorrelated -- good readers stay good.
+    review_warmup_clips: int = 20
+    review_sample_fraction: float = 0.10
+    # Snap back to reviewing everything if a speaker's rejection rate exceeds
+    # this once they are past warm-up.
+    review_reject_rate_trigger: float = 0.20
+    # Reviewer fatigue produces bad labels; the UI suggests stopping after this.
+    review_session_minutes: int = 45
+
     @property
     def base_dir(self) -> Path:
         return BASE_DIR
+
+    @property
+    def reviewers(self) -> dict[str, str]:
+        """Parsed `REVIEWER_TOKENS` as {name: token}. Empty means review is off."""
+        out: dict[str, str] = {}
+        for pair in self.reviewer_tokens.split(","):
+            pair = pair.strip()
+            if not pair or ":" not in pair:
+                continue
+            name, _, token = pair.partition(":")
+            name, token = name.strip(), token.strip()
+            if name and token:
+                out[name] = token
+        return out
 
 
 @lru_cache(maxsize=1)

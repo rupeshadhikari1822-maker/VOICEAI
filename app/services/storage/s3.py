@@ -13,6 +13,7 @@ from app.core.config import Settings
 from app.services.storage.base import (
     WAV_CONTENT_TYPE,
     BaseStorage,
+    PresignedTarget,
     PresignedUpload,
     StorageError,
 )
@@ -53,6 +54,15 @@ class S3Storage(BaseStorage):
             key=key,
             expires_at=int(time.time()) + self.settings.presign_ttl_s,
         )
+
+    def presign_get(self, key: str, ttl_s: int | None = None) -> PresignedTarget:
+        ttl = ttl_s if ttl_s is not None else self.settings.presign_get_ttl_s
+        url = self.client.generate_presigned_url(
+            "get_object",
+            Params={"Bucket": self.bucket, "Key": key},
+            ExpiresIn=ttl,
+        )
+        return PresignedTarget(url=url, expires_at=int(time.time()) + ttl)
 
     def get_bytes(self, key: str) -> bytes:
         try:

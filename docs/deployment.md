@@ -81,8 +81,17 @@ python scripts/init_db.py
 python scripts/import_prompts.py data/prompts_ne.jsonl
 ```
 
-Schema changes are applied with `create_all()`, which only ever adds tables. For
-column changes on a live corpus, add Alembic before you need it.
+`init_db.py` runs `alembic upgrade head`. Run it on every deploy, not just the
+first: `create_all()` would add missing *tables* but never a *column* to an
+existing one, so a new field would silently not exist and every insert would
+fail with `no such column`.
+
+For a database created before Alembic was added, mark it once rather than
+replaying the baseline over live tables:
+
+```bash
+python scripts/init_db.py --stamp
+```
 
 ## 3. Run it
 
@@ -127,7 +136,50 @@ the proxy entirely.
 Set `PUBLIC_BASE_URL=https://voice.cloudfrm.ai` to match, or presigned local
 uploads will point at the wrong host.
 
-## 4. Before the first real session
+## 4. Reviewer access
+
+The `/review` UI is gated by named staff tokens:
+
+```bash
+REVIEWER_TOKENS=alice:tok1,bob:tok2
+```
+
+Generate them with `python -c "import secrets;print(secrets.token_urlsafe(24))"`.
+Reviewers open `/review?token=tok1`.
+
+**This is staff-grade auth, not a public identity system.** Be clear about what
+it does and does not give you:
+
+- It *does* put a name on every verdict, which is the part that matters for the
+  data: attribution makes inter-reviewer agreement measurable and lets a bad
+  reviewing session be found and reverted.
+- It does *not* give you per-user passwords, token rotation, session management,
+  or any record of who holds which token. A shared token is exactly as good as
+  the people you gave it to.
+- Tokens appear in the URL, so they land in browser history and in any proxy
+  logs in front of the app. The query form exists because `<audio src>` cannot
+  carry a header.
+
+If reviewing is ever opened beyond trusted staff, replace this with real
+authentication first. Do not reuse it for anything public-facing.
+
+With `REVIEWER_TOKENS` unset, `/review` returns 401 and the rest of the app is
+unaffected -- which is the right posture until you actually have reviewers.
+
+### Playback
+
+The review UI plays audio from short-lived presigned GET URLs
+(`PRESIGN_GET_TTL_S`, default 300s), fetched directly from the bucket. Audio is
+never streamed through the API process. **Keep the bucket private** -- a review
+UI is the easiest place to accidentally make a corpus public.
+
+On R2 this needs `GET` added to the CORS policy alongside `PUT`:
+
+```json
+"AllowedMethods": ["PUT", "GET"]
+```
+
+## 5. Before the first real session
 
 - [ ] `SECRET_KEY` set to a real value — `python -c "import secrets;print(secrets.token_hex(32))"`
 - [ ] `PUBLIC_BASE_URL` matches the HTTPS URL contributors will open
@@ -141,7 +193,13 @@ uploads will point at the wrong host.
       the masters
 - [ ] A named person who can action `scripts/withdraw.py` within a few days
 
-## 5. Testing over HTTPS without deploying
+### Review checklist
+
+- [ ] `REVIEWER_TOKENS` set, one distinct token per person
+- [ ] Bucket CORS allows `GET` as well as `PUT`
+- [ ] Bucket is still private (presigned URLs are the only read path)
+
+## 6. Testing over HTTPS without deploying
 
 ```bash
 uvicorn app.main:app --reload
@@ -152,7 +210,7 @@ Set `PUBLIC_BASE_URL` to the tunnel URL it prints, then restart uvicorn. Good
 enough to hand the link to a few people; not for a real collection round, since
 the tunnel URL changes every restart.
 
-## 6. Backups
+## 7. Backups
 
 The 48 kHz masters under `raw/` are the irreplaceable part. Everything under
 `derived/` regenerates from them with `scripts/export_dataset.py`, and the

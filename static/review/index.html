@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="ne">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>जाँच — voice.cloudfrm.ai</title>
+<link rel="stylesheet" href="/static/review/styles.css">
+</head>
+<body>
+
+<header>
+  <span class="brand">voice<span class="accent">.cloudfrm</span>.ai</span>
+  <span class="tag">जाँच / review</span>
+  <span class="who" id="reviewer">—</span>
+</header>
+
+<main>
+
+  <!-- The prompt as the reader saw it. Nothing else competes with it. -->
+  <section class="stage">
+    <div class="prompt" id="prompt">लोड हुँदैछ…</div>
+    <p class="clip-meta" id="clip-meta"></p>
+
+    <audio id="audio" preload="auto"></audio>
+
+    <div class="controls">
+      <button id="btn-verify" class="ok"><kbd>Enter</kbd> ठीक छ</button>
+      <button id="btn-reject" class="bad"><kbd>1–9</kbd> गलत छ</button>
+      <button id="btn-skip"><kbd>S</kbd> छोड्नुहोस्</button>
+      <button id="btn-undo"><kbd>Z</kbd> फिर्ता</button>
+    </div>
+
+    <div class="reject-panel" id="reject-panel"></div>
+
+    <p class="note" id="note"></p>
+
+    <!-- Hidden until a verdict is committed. Showing SNR or the ASR text
+         beforehand anchors the reviewer into agreeing with the machine. -->
+    <div class="verdict-panel hidden" id="verdict-panel"></div>
+  </section>
+
+  <aside>
+    <div class="stats">
+      <div><span>जाँचिएको</span><strong id="done-count">0</strong></div>
+      <div><span>अस्वीकृत दर</span><strong id="reject-rate">—</strong></div>
+      <div><span>लाइनमा</span><strong id="queue-depth">0</strong></div>
+      <div><span>समय</span><strong id="session-time">0:00</strong></div>
+    </div>
+
+    <h2>कीबोर्ड</h2>
+    <ul class="keys">
+      <li><kbd>Space</kbd><span>बजाउनुहोस् / रोक्नुहोस्</span></li>
+      <li><kbd>R</kbd><span>फेरि सुन्नुहोस्</span></li>
+      <li><kbd>Enter</kbd><span>ठीक छ</span></li>
+      <li><kbd>S</kbd><span>छोड्नुहोस्</span></li>
+      <li><kbd>U</kbd><span>अनिश्चित</span></li>
+      <li><kbd>Z</kbd><span>फिर्ता लिनुहोस्</span></li>
+    </ul>
+
+    <h2>अस्वीकृतिका कारण</h2>
+    <ul class="keys" id="reasons"></ul>
+
+    <p class="hint">
+      वाक्य सुनेर मात्र निर्णय गर्नुहोस्। मेसिनले के सुन्यो र आवाजको नाप
+      निर्णय पछि मात्र देखिन्छ — पहिले देखाए त्यसैले प्रभावित हुन सकिन्छ।
+    </p>
+  </aside>
+
+</main>
+
+<script type="module" src="/static/review/review.js"></script>
+</body>
+</html>

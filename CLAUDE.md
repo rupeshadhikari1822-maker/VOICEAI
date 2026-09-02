@@ -27,6 +27,13 @@ and Postgres in production.
    `app/services/audio_qc/` re-reads the stored bytes and decides pass/fail.
 6. **Splits are speaker-disjoint.** Never let one voice appear in both train
    and test. `assign_splits()` assigns whole speakers, never individual clips.
+7. **The review queue never shows QC metrics or ASR text before a verdict.**
+   Showing SNR anchors the reviewer into passing; showing the ASR transcript
+   means they review the transcript instead of the audio. Both are returned in
+   the verdict response, which is where they help.
+8. **Review history is append-only.** Every verdict writes a `ReviewEvent` as
+   well as updating `Clip.verify_status`. Never update or delete an event -- a
+   changed verdict is a new row. Undo is scoped to the caller's own last one.
 
 The `tests/` suite asserts rules 3, 4, 5 and 6. If you change any of them,
 that test should fail — if it doesn't, the test is wrong too.
@@ -48,6 +55,7 @@ app/
   services/               domain logic, no FastAPI imports
     audio_qc/             metrics.py (physics) | thresholds.py (policy) | gate.py (messages)
     storage/              base.py | keys.py | local.py | s3.py; __init__ picks the backend
+    review/               queue.py | verdicts.py | normalize.py | asr_prefilter.py | reasons.py
     consent.py
 static/
   recorder/               the contributor UI
@@ -72,6 +80,8 @@ python scripts/smoke_test.py                   # wraps pytest; -k to filter
 uvicorn app.main:app --reload
 python scripts/qc_report.py
 python scripts/export_dataset.py --format asr --sr 16000 --out export_out/asr
+python scripts/asr_prefilter.py --dry-run       # optional; shrinks the review queue
+python scripts/prompt_health.py                 # prompts several people misread
 ```
 
 **Schema changes go through Alembic, never `create_all()`.** `create_all()` adds
@@ -100,11 +110,12 @@ alembic upgrade head
 
 ## Good next tasks
 
-- Validation UI at `/review` for a second person to approve/reject clips. The
-  `clips` table already has `verify_status`, `verified_by` and `verified_at`,
-  and `export_dataset.py` already honours `--verified-only`. Only the UI and
-  two routes are missing. This is the highest-value next task: automated QC
-  catches noise and clipping but cannot catch a clean misread.
-- Montreal Forced Aligner pass to flag misreads automatically.
+- Montreal Forced Aligner pass, for word-level timing on the clips the ASR
+  pre-filter leaves ambiguous. Would let the review UI highlight *where* a
+  reading diverged instead of just that it did.
+- Inter-reviewer agreement in practice: route a small fixed percentage of
+  already-settled clips back into the queue for a second opinion. The
+  `ReviewEvent` history already supports measuring it; nothing currently
+  creates the overlap.
 - Resumable sessions via a signed link so a speaker can return later.
 - Rate limiting and a simple abuse check on `/api/speakers`.

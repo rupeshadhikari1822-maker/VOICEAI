@@ -10,6 +10,7 @@ from app.core.config import get_settings
 from app.services.storage.base import (
     WAV_CONTENT_TYPE,
     BaseStorage,
+    PresignedTarget,
     PresignedUpload,
     StorageError,
 )
@@ -20,6 +21,7 @@ from app.services.storage.s3 import S3Storage
 __all__ = [
     "BaseStorage",
     "LocalStorage",
+    "PresignedTarget",
     "PresignedUpload",
     "S3Storage",
     "StorageError",

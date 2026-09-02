@@ -31,6 +31,8 @@ class Clip(Base):
     __table_args__ = (
         Index("ix_clips_qc", "qc_status", "lang"),
         Index("ix_clips_speaker_prompt", "speaker_id", "prompt_id"),
+        # The review queue filters on these together, then orders by priority.
+        Index("ix_clips_review", "verify_status", "lang", "tombstoned"),
     )
 
     id: Mapped[str] = mapped_column(String(26), primary_key=True, default=new_ulid)
@@ -63,9 +65,28 @@ class Clip(Base):
     client_metrics: Mapped[dict | None] = mapped_column(JSON)
 
     # --- Human validation (the /review pass) ---------------------------
+    # Denormalised current state, for queries. Every change also appends a
+    # ReviewEvent, which is the record of how it got here.
     verify_status: Mapped[str] = mapped_column(String(16), default="unverified")
     verified_at: Mapped[datetime | None] = mapped_column(DateTime)
+    # A reviewer name, or "asr:<model>" when the pre-filter decided.
     verified_by: Mapped[str | None] = mapped_column(String(80))
+    # One of app.services.review.reasons.RejectReason.
+    reject_reason: Mapped[str | None] = mapped_column(String(32))
+    review_notes: Mapped[str | None] = mapped_column(String(300))
+    # Higher sorts first in the queue. Set from ASR uncertainty.
+    # server_default matters: without it, adding this NOT NULL column to a
+    # table that already has rows fails outright on Postgres.
+    review_priority: Mapped[int] = mapped_column(
+        Integer, default=0, server_default="0", index=True
+    )
+
+    # --- ASR pre-filter (scripts/asr_prefilter.py) ----------------------
+    # Written even when auto-verifying: a reviewer auditing the auto-pass
+    # decisions needs to see what the model actually heard.
+    asr_text: Mapped[str | None] = mapped_column(Text)
+    asr_cer: Mapped[float | None] = mapped_column(Float)
+    asr_model: Mapped[str | None] = mapped_column(String(60))
 
     # Set by scripts/withdraw.py. Tombstoned clips never export.
     tombstoned: Mapped[bool] = mapped_column(Boolean, default=False, index=True)
