@@ -124,7 +124,7 @@ Then set `PUBLIC_BASE_URL` in `.env` to the URL it prints and restart uvicorn â€
 otherwise the presigned local-upload URLs point at `localhost` and uploads fail
 from the contributor's phone.
 
-For production, see `docs/deployment.md`.
+For production, see `docs/operations/deployment.md`.
 
 ## 6. Deploying to voice.cloudfrm.ai
 
@@ -135,4 +135,4 @@ code.
 To point the domain at this app you need a host that runs a long-lived Python
 process â€” this is a stateful FastAPI server with an AudioWorklet frontend, not a
 static site or a set of serverless functions. Any small VPS works; see
-`docs/deployment.md` for the systemd unit and Caddy config.
+`docs/operations/deployment.md` for the systemd unit and Caddy config.

@@ -404,7 +404,7 @@ def _write_card(
         "",
         "Derived from 48 kHz / 16-bit / mono PCM masters captured in-browser via",
         "AudioWorklet with echo cancellation, noise suppression and auto gain",
-        "control disabled. Every clip passed server-side QC in `app/audio_qc.py`.",
+        "control disabled. Every clip passed server-side QC in `app/services/audio_qc/`.",
     ]
     if args.format in ("tts", "ljspeech"):
         lines.append(f"Loudness-normalised to {TTS_TARGET_LUFS:.0f} LUFS.")

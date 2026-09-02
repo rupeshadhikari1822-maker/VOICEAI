@@ -21,7 +21,7 @@ and Postgres in production.
    frozen level meter with no error anywhere. Do not remove it.
 3. **Browser DSP stays off.** `echoCancellation`, `noiseSuppression` and
    `autoGainControl` must remain `false` in `getUserMedia` constraints
-   (`static/audio.js`, `MIC_CONSTRAINTS`).
+   (`static/recorder/audio.js`, `MIC_CONSTRAINTS`).
 4. **No PII in object keys, filenames, logs or exports.** Only the opaque
    `speaker_id` ULID. Names, emails, phones and caste live in the `speakers`
    table and nowhere else.
@@ -130,6 +130,48 @@ alembic upgrade head
   `app/api/deps.py`. Services never import FastAPI.
 - `BASE_DIR` in `app/core/config.py` is `parents[2]`. If that file ever moves,
   fix it — everything resolving `static/` and `docs/` hangs off it.
+
+## Decisions that must not be silently reversed
+
+Each links the record of why. Reversing one of these does not produce a bug that
+shows up in a test — it produces a corpus that is quietly unusable, or a consent
+record that cannot be defended. Read the ADR before changing any of them.
+
+| Decision | Record |
+|---|---|
+| AudioWorklet, never MediaRecorder | [ADR-001](docs/architecture/ADR-001-audio-capture.md) |
+| 48 kHz masters; derived sets generated on export | [ADR-002](docs/architecture/ADR-002-storage-and-formats.md) |
+| `echoCancellation` / `noiseSuppression` / `autoGainControl` all false | [ADR-001](docs/architecture/ADR-001-audio-capture.md) |
+| The zero-gain keepalive node to `destination` | [ADR-001](docs/architecture/ADR-001-audio-capture.md) |
+| Server computes the consent SHA; the client's is ignored | [ADR-003](docs/architecture/ADR-003-consent-model.md) |
+| No PII in object keys, logs or exports | [ADR-002](docs/architecture/ADR-002-storage-and-formats.md), [ADR-003](docs/architecture/ADR-003-consent-model.md) |
+| Speaker-disjoint splits | [ADR-007](docs/architecture/ADR-007-quality-gate-and-review.md) |
+| ULIDs, not sequential speaker IDs | [ADR-005](docs/architecture/ADR-005-speaker-identifiers.md) |
+| `app/` root holds `main.py` and `__init__.py` only | [ADR-004](docs/architecture/ADR-004-repository-structure.md) |
+
+## The long-range roadmap is not a task list
+
+A 72-section planning document exists for this project. It is a **two-year
+plan**, and several sections describe approaches that were considered and
+deliberately rejected — §3 specifies MediaRecorder, §16 names 16 kHz as the
+archival format. Implementing either destroys the corpus, and both look exactly
+like following the spec.
+
+**Check [`docs/roadmap/reconciliation.md`](docs/roadmap/reconciliation.md) before
+implementing anything from it.** It maps each reviewed section to Built,
+Deviated, Deferred or Gap, with an ADR for every deviation and a trigger
+condition for every deferral.
+
+That table is incomplete — roughly sixty sections are unreviewed. An absent row
+means "nobody has checked", not "not applicable".
+
+## Working rule
+
+Plan, implement, test, inspect, fix, commit, next. One concern per commit.
+
+Run the app and click through it before reporting that something works. Several
+bugs here were invisible to a passing suite and obvious within ten seconds of
+loading the page.
 
 ## Good next tasks
 

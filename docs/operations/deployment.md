@@ -1,6 +1,6 @@
 # Deployment
 
-> **For record.cloudfrm.ai specifically, follow [`deploy/README.md`](../deploy/README.md).**
+> **For record.cloudfrm.ai specifically, follow [`deploy/README.md`](../../deploy/README.md).**
 > It has the ordered runbook, a bootstrap script, and the Caddy/systemd files.
 > This page is the background: what the pieces are and why.
 

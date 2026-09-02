@@ -120,7 +120,7 @@ Shown in the app before the first take, and enforced by the mic check:
 - Speak naturally at normal pace. Don't perform, don't read like a newsreader.
 - Pause ~0.5 s before starting and after finishing each sentence.
 
-Full version with the Nepali text: `docs/recording-guide.md`.
+Full version with the Nepali text: `docs/collection/recording-guide.md`.
 
 ## 6. Privacy — read this before you collect anything
 
@@ -287,7 +287,7 @@ REVIEWER_TOKENS=alice:tok1,bob:tok2
 ```
 
 Then open `/review?token=tok1`. This is staff-grade auth, not a public identity
-system — see `docs/deployment.md`. Every verdict is attributed, which is what
+system — see `docs/operations/deployment.md`. Every verdict is attributed, which
 makes agreement measurable and a bad session revertible.
 
 Verdicts are append-only: `Clip.verify_status` holds the current state and a
