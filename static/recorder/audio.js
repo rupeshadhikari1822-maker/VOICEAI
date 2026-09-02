@@ -44,6 +44,10 @@ export class Recorder {
     this.recording = false;
     this.onLevel = null;
     this.sampleRate = TARGET_SAMPLE_RATE;
+    this.keepalive = null;
+    // Set on the first 'level' message. If this stays false, process() is not
+    // running and no amount of recording will produce audio.
+    this.workletAlive = false;
   }
 
   get ready() {
@@ -67,20 +71,41 @@ export class Recorder {
     this.source = this.context.createMediaStreamSource(this.stream);
     this.node = new AudioWorkletNode(this.context, 'pcm-recorder', {
       numberOfInputs: 1,
-      numberOfOutputs: 0,
+      // One output, connected below through a MUTED gain node to destination.
+      //
+      // DO NOT "clean this up". A capture-only worklet with no path to
+      // destination is the architecturally honest graph -- we are recording,
+      // not playing -- and it works on Chrome. But WebKit has historically
+      // treated a graph with no route to destination as inactive and stopped
+      // calling process(), which produces a uniquely confusing failure: mic
+      // permission granted, track live, label and sample rate correct, no
+      // error anywhere, and a level meter frozen at silence.
+      //
+      // The gain is 0, so nothing is ever audible and no mic audio reaches the
+      // speakers. This costs one node and removes a whole class of
+      // device-specific silence.
+      numberOfOutputs: 1,
+      outputChannelCount: [1],
       channelCount: 1,
     });
+
+    // Muted sink. Keeps the graph alive without producing sound.
+    this.keepalive = this.context.createGain();
+    this.keepalive.gain.value = 0;
 
     this.node.port.onmessage = (event) => {
       const msg = event.data;
       if (msg.type === 'chunk') {
         this.chunks.push(msg.data);
-      } else if (msg.type === 'level' && this.onLevel) {
-        this.onLevel(msg);
+      } else if (msg.type === 'level') {
+        this.workletAlive = true;
+        if (this.onLevel) this.onLevel(msg);
       }
     };
 
     this.source.connect(this.node);
+    this.node.connect(this.keepalive);
+    this.keepalive.connect(this.context.destination);
   }
 
   /** Actual hardware track settings, for the mic check and device_hint. */
@@ -116,10 +141,13 @@ export class Recorder {
 
   close() {
     if (this.stream) this.stream.getTracks().forEach((t) => t.stop());
+    if (this.node) this.node.disconnect();
+    if (this.keepalive) this.keepalive.disconnect();
     if (this.context) this.context.close();
     this.stream = null;
     this.context = null;
     this.node = null;
+    this.keepalive = null;
   }
 }
 

@@ -14,35 +14,40 @@ and Postgres in production.
 1. **Audio stays uncompressed.** The browser must produce 48 kHz / 16-bit /
    mono PCM WAV via `AudioWorklet`. Do not replace this with `MediaRecorder`;
    it yields WebM/Opus and destroys the data.
-2. **Browser DSP stays off.** `echoCancellation`, `noiseSuppression` and
+2. **The worklet node keeps a muted path to `destination`.** `audio.js` routes
+   the AudioWorkletNode through a zero-gain node to the destination. It looks
+   like dead code and is not: WebKit can treat a graph with no route to
+   destination as inactive and stop calling `process()`, which presents as a
+   frozen level meter with no error anywhere. Do not remove it.
+3. **Browser DSP stays off.** `echoCancellation`, `noiseSuppression` and
    `autoGainControl` must remain `false` in `getUserMedia` constraints
    (`static/audio.js`, `MIC_CONSTRAINTS`).
-3. **No PII in object keys, filenames, logs or exports.** Only the opaque
+4. **No PII in object keys, filenames, logs or exports.** Only the opaque
    `speaker_id` ULID. Names, emails, phones and caste live in the `speakers`
    table and nowhere else.
-4. **Caste/ethnicity is optional and never exported.** It is sensitive personal
+5. **Caste/ethnicity is optional and never exported.** It is sensitive personal
    information under Nepal's Individual Privacy Act 2075 s.27(2). The export
    path goes through `Speaker.export_row()`, which cannot reach it.
-5. **Server-side QC is authoritative.** Client metrics are a UX convenience;
+6. **Server-side QC is authoritative.** Client metrics are a UX convenience;
    `app/services/audio_qc/` re-reads the stored bytes and decides pass/fail.
-6. **Splits are speaker-disjoint.** Never let one voice appear in both train
+7. **Splits are speaker-disjoint.** Never let one voice appear in both train
    and test. `assign_splits()` assigns whole speakers, never individual clips.
-7. **The review queue never shows QC metrics or ASR text before a verdict.**
+8. **The review queue never shows QC metrics or ASR text before a verdict.**
    Showing SNR anchors the reviewer into passing; showing the ASR transcript
    means they review the transcript instead of the audio. Both are returned in
    the verdict response, which is where they help.
-8. **The production guard must not be weakened.** With `ENVIRONMENT=production`,
+9. **The production guard must not be weakened.** With `ENVIRONMENT=production`,
    `app/core/config.py` refuses to boot on local storage, SQLite, a non-https
    base URL, or the default secret. Do not add silent fallbacks to it.
-9. **Never let a contributor record before the storage preflight passes.**
+10. **Never let a contributor record before the storage preflight passes.**
    Bucket CORS cannot be tested server-side, so the recorder proves uploads
    work with a real cross-origin PUT at session start. Removing that check
    trades a clear error for twenty-five wasted sentences.
-10. **Review history is append-only.** Every verdict writes a `ReviewEvent` as
+11. **Review history is append-only.** Every verdict writes a `ReviewEvent` as
    well as updating `Clip.verify_status`. Never update or delete an event -- a
    changed verdict is a new row. Undo is scoped to the caller's own last one.
 
-The `tests/` suite (`pytest -q`) asserts rules 3, 4, 5 and 6. If you change any of them,
+The `tests/` suite (`pytest -q`) asserts rules 4, 5, 6 and 7. If you change any of them,
 that test should fail — if it doesn't, the test is wrong too.
 
 ## Layout

@@ -242,6 +242,35 @@ $('#mic-start').addEventListener('click', async () => {
       if (info[key] === true) problems.push(`ब्राउजरले ${label} बन्द गर्न मानेन।`);
     }
 
+    // Watchdog for a failure with no error attached to it.
+    //
+    // If the audio graph is not being scheduled, process() never runs: the mic
+    // permission is granted, the track is live, the label and sample rate
+    // display correctly, and the level meter sits frozen at silence with
+    // nothing in the console. On a phone there IS no console, so without this
+    // the contributor and the operator both see "it just doesn't work".
+    //
+    // The worklet posts a level message roughly every 20 ms, so a second of
+    // nothing is decisive rather than a slow start.
+    await new Promise((r) => setTimeout(r, 1200));
+    if (!state.recorder.workletAlive) {
+      $('#mic-problems').innerHTML = '';
+      setStatus(
+        status,
+        'माइक खुल्यो तर आवाज आइरहेको छैन। यो तपाईंको गल्ती होइन — ' +
+          'यो यन्त्र/ब्राउजरको समस्या हो। सम्भव भए Chrome प्रयोग गर्नुहोस्, ' +
+          'नभए hello@cloudfrm.ai मा खबर गर्नुहोस्। (AUDIO_WORKLET_SILENT)',
+        'error',
+      );
+      console.error(
+        '[mic] AUDIO_WORKLET_SILENT: process() produced no frames in 1.2s. ' +
+          'The AudioWorklet is not being scheduled — the graph is likely ' +
+          'considered inactive by this browser.',
+        { sampleRate: rate, label: info.label, state: state.recorder.context.state },
+      );
+      return;
+    }
+
     $('#mic-problems').innerHTML = problems.map((p) => `<li>${p}</li>`).join('');
     setStatus(status, problems.length ? 'चेतावनी हेर्नुहोस्।' : 'माइक तयार छ। अब ५ सेकेन्ड चुप बस्नुहोस्।', problems.length ? 'warn' : 'ok');
 

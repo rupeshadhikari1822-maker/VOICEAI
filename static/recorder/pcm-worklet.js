@@ -45,7 +45,10 @@ class PCMRecorder extends AudioWorkletProcessor {
     this.offset = 0;
   }
 
-  process(inputs) {
+  // `outputs` is left untouched: it is zero-filled, and the node feeds a
+  // muted gain node purely to keep the graph scheduled on WebKit. See the
+  // comment on numberOfOutputs in audio.js.
+  process(inputs, _outputs) {
     const input = inputs[0];
     if (!input || input.length === 0) return true;
     const channel = input[0];
