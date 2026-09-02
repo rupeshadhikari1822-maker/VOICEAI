@@ -79,9 +79,27 @@ reaches storage. R2 → your bucket → Settings → CORS policy:
 
 Keep the bucket **private**. Presigned URLs are the only read and write path.
 
-Add a lifecycle rule expiring the `_preflight/` prefix after one day. The
-in-app storage preflight writes a 1 KB probe object there at the start of every
-session; they carry no contributor data, but there is no reason to keep them.
+### 3b. Lifecycle rule for `_preflight/`
+
+The storage preflight writes a 1 KB probe at the start of every session. They
+carry no contributor data and are never backed up, but nothing expires them on
+its own. Add a lifecycle rule:
+
+| Field | Value |
+|---|---|
+| Prefix | `_preflight/` |
+| Action | Delete object |
+| Age | 1 day |
+
+**Confirm the rule is scoped to that prefix and nothing else.** A lifecycle rule
+with an empty prefix, or one accidentally pointing at `raw/`, deletes the 48 kHz
+masters on a one-day timer — quietly, with no error, and the speakers have gone
+home. This is the single most destructive misconfiguration available in the R2
+console, and it looks identical to the correct one apart from one field.
+
+After saving it, read it back and check the prefix field is exactly
+`_preflight/`. `backup_corpus.py --verify` reports the probe count on every run,
+so if the rule is missing or not firing you will see the number climb.
 
 ### The preflight is what protects the contributor
 

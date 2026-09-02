@@ -55,7 +55,19 @@ from app.services.storage import StorageError, get_storage  # noqa: E402
 
 # Everything under derived/ regenerates from raw/. Backing it up doubles the
 # bill to store something a command can rebuild.
+#
+# This is an allow-list rather than a skip-list on purpose: both the copy and
+# the audit enumerate only these prefixes, so a new prefix -- `_preflight/`
+# probes, a scratch directory, anything a future feature adds -- is excluded by
+# default rather than silently replicated to the archive forever.
 BACKUP_PREFIXES = ("raw/", "consent/")
+
+# Session probes written by GET /api/storage/preflight. Never backed up. Counted
+# during the audit only so a missing bucket lifecycle rule becomes visible.
+PREFLIGHT_PREFIX = "_preflight/"
+
+# One probe per session. Past this, the lifecycle rule is probably missing.
+PREFLIGHT_WARN_AT = 200
 
 
 def human(n: int) -> str:
@@ -126,6 +138,22 @@ def verify(storage) -> int:
             print(f"    ... and {len(orphans) - 10} more")
         print("    These cannot be tied to a consent record. Investigate before")
         print("    exporting; an interrupted upload is the usual innocent cause.")
+
+    # Not corpus data, and never copied -- but if nothing is expiring them,
+    # they accumulate one per session forever and nobody notices.
+    probes = list(storage.list_keys(PREFLIGHT_PREFIX))
+    if probes:
+        probe_bytes = human(sum(size for _, size in probes))
+        print(f"\n  preflight probes   : {len(probes)}  ({probe_bytes})")
+        if len(probes) > PREFLIGHT_WARN_AT:
+            print(
+                f"    More than {PREFLIGHT_WARN_AT} probe objects under "
+                f"{PREFLIGHT_PREFIX}. They are never backed up and carry no"
+            )
+            print("    contributor data, but a lifecycle rule should be expiring")
+            print("    them after a day. Check the rule exists AND is scoped to")
+            print(f"    {PREFLIGHT_PREFIX} only -- a rule mis-scoped to raw/ would")
+            print("    quietly delete the corpus.")
 
     print()
     if problems:

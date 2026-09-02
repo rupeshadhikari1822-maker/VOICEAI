@@ -164,3 +164,39 @@ def test_each_preflight_uses_a_fresh_key(client):
         for _ in range(3)
     }
     assert len(keys) == 3, "probe keys must not collide between sessions"
+
+
+# --- B6: probes must never reach the archive ----------------------------
+
+
+def test_backup_prefixes_exclude_preflight_probes():
+    """An allow-list, so a new prefix is excluded by default.
+
+    If this ever became a skip-list, or grew to cover the whole bucket, every
+    session's 1 KB probe would replicate to the offsite archive forever.
+    """
+    from scripts.backup_corpus import BACKUP_PREFIXES, PREFLIGHT_PREFIX
+
+    assert BACKUP_PREFIXES == ("raw/", "consent/")
+    assert PREFLIGHT_PREFIX not in BACKUP_PREFIXES
+    assert not any(PREFLIGHT_PREFIX.startswith(p) for p in BACKUP_PREFIXES)
+    # derived/ regenerates from raw/; backing it up doubles the bill.
+    assert "derived/" not in BACKUP_PREFIXES
+
+
+def test_backup_copies_corpus_audio_but_not_probes(tmp_path):
+    """End to end against real objects, not just the constant."""
+    from app.core.config import get_settings
+    from app.services.storage import LocalStorage
+    from scripts.backup_corpus import copy_objects
+
+    storage = LocalStorage(get_settings())
+    storage.put_bytes("raw/ne/BACKUPTEST/SES/CLIP.wav", b"audio-bytes")
+    storage.put_bytes("_preflight/PROBE.bin", b"\x00" * 1024)
+    storage.put_bytes("derived/16k/ne/BACKUPTEST/CLIP.wav", b"regenerable")
+
+    copy_objects(storage, tmp_path, dry_run=False)
+
+    assert (tmp_path / "raw/ne/BACKUPTEST/SES/CLIP.wav").is_file()
+    assert not (tmp_path / "_preflight").exists(), "probes must not be archived"
+    assert not (tmp_path / "derived").exists(), "derived/ rebuilds from raw/"
