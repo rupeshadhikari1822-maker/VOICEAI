@@ -13,6 +13,8 @@ from app.core.config import DEFAULT_SECRET_KEY, Settings
 PROD = {
     "environment": "production",
     "storage_backend": "s3",
+    # Required once the backend is s3: the endpoint validator runs first.
+    "s3_endpoint_url": "https://a1b2c3.r2.cloudflarestorage.com",
     "database_url": "postgresql+psycopg://u:p@localhost/voice",
     "public_base_url": "https://record.cloudfrm.ai",
     "secret_key": "a" * 64,
@@ -221,3 +223,48 @@ def test_app_root_holds_only_the_entry_point():
         f"unexpected module(s) in app/ root: {loose}. "
         "Move it into core/, api/, models/, schemas/ or services/."
     )
+
+
+# --- S3 endpoint format -------------------------------------------------
+
+S3 = {"storage_backend": "s3", "s3_access_key_id": "k", "s3_secret_access_key": "s"}
+
+
+def test_correct_endpoint_is_accepted():
+    Settings(**S3, s3_endpoint_url="https://a1b2c3.r2.cloudflarestorage.com")
+
+
+def test_trailing_slash_is_tolerated():
+    """Harmless; boto3 normalises it. Only a real path is a problem."""
+    Settings(**S3, s3_endpoint_url="https://a1b2c3.r2.cloudflarestorage.com/")
+
+
+def test_endpoint_with_the_bucket_appended_is_refused():
+    """The R2 console shows the bucket on the end, so pasting it is natural.
+
+    Left alone, boto3 nests every key under that path and the failure arrives
+    much later as a 404 on an upload -- which reads as a missing object rather
+    than a wrong endpoint.
+    """
+    with pytest.raises(ValueError, match="path on it"):
+        Settings(**S3, s3_endpoint_url="https://a1b2c3.r2.cloudflarestorage.com/voice-corpus")
+
+
+def test_unsubstituted_placeholder_is_refused():
+    with pytest.raises(ValueError, match="placeholder"):
+        Settings(**S3, s3_endpoint_url="https://<account_id>.r2.cloudflarestorage.com")
+
+
+def test_non_https_endpoint_is_refused():
+    with pytest.raises(ValueError, match="must be https"):
+        Settings(**S3, s3_endpoint_url="http://a1b2c3.r2.cloudflarestorage.com")
+
+
+def test_empty_endpoint_is_refused_when_backend_is_s3():
+    with pytest.raises(ValueError, match="empty"):
+        Settings(**S3, s3_endpoint_url="")
+
+
+def test_local_backend_ignores_the_endpoint_entirely():
+    """Development must not be dragged into S3 validation."""
+    assert Settings(storage_backend="local", s3_endpoint_url="nonsense").is_production is False

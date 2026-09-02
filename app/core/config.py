@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from functools import lru_cache
 from pathlib import Path
+from urllib.parse import urlparse
 
 from pydantic import model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -88,6 +89,58 @@ class Settings(BaseSettings):
     @property
     def is_production(self) -> bool:
         return self.environment.strip().lower() in {"production", "prod"}
+
+    @model_validator(mode="after")
+    def _guard_s3_endpoint(self) -> "Settings":
+        """Reject a malformed R2/S3 endpoint at boot, not at the first upload.
+
+        The R2 console shows the endpoint with the bucket already appended
+        (`https://<acct>.r2.cloudflarestorage.com/voice-corpus`), and pasting it
+        verbatim is the natural thing to do. boto3 then builds every key under
+        that path, and the failure arrives much later as a 404 on an upload,
+        which reads as a missing object rather than a wrong endpoint.
+
+        Runs whenever the backend is s3, not only in production: the failure is
+        identical either way.
+        """
+        if self.storage_backend.strip().lower() != "s3":
+            return self
+
+        endpoint = (self.s3_endpoint_url or "").strip()
+        problems: list[str] = []
+
+        if not endpoint:
+            problems.append("S3_ENDPOINT_URL is empty.")
+        else:
+            if "<" in endpoint or ">" in endpoint:
+                problems.append(
+                    f"S3_ENDPOINT_URL still contains a placeholder: {endpoint!r}. "
+                    "Substitute your Cloudflare account ID."
+                )
+            parsed = urlparse(endpoint)
+            if parsed.scheme != "https":
+                problems.append(
+                    f"S3_ENDPOINT_URL must be https, got {parsed.scheme or 'no scheme'!r}."
+                )
+            if not parsed.netloc:
+                problems.append(f"S3_ENDPOINT_URL has no host: {endpoint!r}.")
+            # The one that actually bites.
+            if parsed.path.strip("/"):
+                problems.append(
+                    f"S3_ENDPOINT_URL has a path on it: {parsed.path!r}. The R2 "
+                    "console shows the bucket appended, but the app adds the "
+                    "bucket name itself. Use just the host: "
+                    f"https://{parsed.netloc}"
+                )
+
+        if problems:
+            listed = "\n".join(f"  {n}. {p}" for n, p in enumerate(problems, 1))
+            raise ValueError(
+                "\n\nrefusing to start: S3_ENDPOINT_URL is not usable\n\n"
+                f"{listed}\n"
+            )
+
+        return self
 
     @model_validator(mode="after")
     def _guard_production(self) -> "Settings":
