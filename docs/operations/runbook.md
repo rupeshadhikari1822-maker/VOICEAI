@@ -105,6 +105,21 @@ endpoint straight from the R2 console with the bucket appended:
 
 The app adds the bucket name itself.
 
+## `refusing to start: consent text not found`
+
+`docs/consent-ne.md` is missing from the deployment. The app will not start,
+which is correct — it used to fall back to placeholder text and keep collecting.
+
+- Confirm `docs/` was included in the deploy: `ls /srv/voice/docs/consent-ne.md`
+- Re-run `bootstrap.sh`, which does a full checkout
+- Do **not** set `ALLOW_MISSING_CONSENT_TEXT` to get past this. It is a local
+  development flag, the production guard refuses it, and any consent record
+  created against placeholder text is worthless.
+
+If the app was running earlier and is now refusing, check whether anything
+recorded during the window when the file was absent — there should be nothing,
+because it would not have started.
+
 ## Certificate will not issue or renew
 
 ```bash
@@ -153,7 +168,7 @@ journalctl --disk-usage
 | `TLS certificate is valid` | Caddy has no cert. See the certificate section. |
 | `HTTP redirects to HTTPS` | Warning only, but a contributor typing the bare host gets no microphone. |
 | `all recorder assets load` | A 404 here breaks recording at the moment they press record. Usually a bad deploy. |
-| `real consent text is deployed` | Serving the built-in fallback. `docs/consent-ne.md` is missing from the deploy. **Stop collecting.** |
+| `real consent text is deployed` | Should be unreachable — a missing consent file now stops the boot. If this fails, someone set `ALLOW_MISSING_CONSENT_TEXT`. **Stop collecting.** |
 | `deployed consent matches this checkout` | The server's consent text differs from this branch. Establish which is correct before recording anything else. |
 | `storage backend is S3/R2` | Running on local storage: one disk, no versioning. |
 | `SECRET_KEY has been changed` | Repo default in use; upload URLs are forgeable. |

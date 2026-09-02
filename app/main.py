@@ -16,6 +16,7 @@ from fastapi.staticfiles import StaticFiles
 from app.api.routes import api_router
 from app.core.config import get_settings
 from app.core.db import create_all
+from app.services.consent import verify_consent_available
 from app.services.storage import StorageError
 
 logger = logging.getLogger("voice")
@@ -26,6 +27,10 @@ _RECORDER_INDEX = _STATIC_DIR / "recorder" / "index.html"
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
+    # Loading consent text is lazy and cached, so without this the failure
+    # would surface on the first contributor's request instead of at startup.
+    verify_consent_available()
+
     # create_all() only ever adds missing tables -- it cannot add a column to an
     # existing one. Schema changes go through Alembic (`alembic upgrade head`).
     create_all()

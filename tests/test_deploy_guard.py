@@ -8,7 +8,11 @@ from __future__ import annotations
 
 import pytest
 
+from pathlib import Path
+
 from app.core.config import DEFAULT_SECRET_KEY, Settings
+
+ROOT_DIR = Path(__file__).resolve().parent.parent
 
 PROD = {
     "environment": "production",
@@ -268,3 +272,61 @@ def test_empty_endpoint_is_refused_when_backend_is_s3():
 def test_local_backend_ignores_the_endpoint_entirely():
     """Development must not be dragged into S3 validation."""
     assert Settings(storage_backend="local", s3_endpoint_url="nonsense").is_production is False
+
+
+# --- consent text must be present ---------------------------------------
+
+
+def test_missing_consent_text_raises_rather_than_falling_back(tmp_path, monkeypatch):
+    """A missing consent file must stop the app, not substitute placeholder text.
+
+    The old behaviour returned built-in text, hashed it, and stored that hash as
+    though it were real. Every speaker recorded in that window would have
+    consented to wording nobody chose to show them -- and unlike every other
+    misconfiguration here, that cannot be repaired afterwards.
+    """
+    from app.core.config import Settings, get_settings
+    from app.services import consent as consent_mod
+
+    empty = Settings(environment="development")
+    monkeypatch.setattr(empty.__class__, "base_dir", property(lambda _self: tmp_path))
+    monkeypatch.setattr(consent_mod, "get_settings", lambda: empty)
+    consent_mod.consent_text.cache_clear()
+
+    with pytest.raises(consent_mod.ConsentTextMissing, match="refusing to start"):
+        consent_mod.consent_text()
+
+    consent_mod.consent_text.cache_clear()
+    get_settings.cache_clear()
+
+
+def test_placeholder_only_with_the_explicit_development_flag(tmp_path, monkeypatch):
+    from app.core.config import Settings, get_settings
+    from app.services import consent as consent_mod
+
+    permissive = Settings(environment="development", allow_missing_consent_text=True)
+    monkeypatch.setattr(permissive.__class__, "base_dir", property(lambda _self: tmp_path))
+    monkeypatch.setattr(consent_mod, "get_settings", lambda: permissive)
+    consent_mod.consent_text.cache_clear()
+
+    text = consent_mod.consent_text()
+    assert "PLACEHOLDER" in text, "the stand-in must announce itself as one"
+
+    consent_mod.consent_text.cache_clear()
+    get_settings.cache_clear()
+
+
+def test_production_refuses_the_missing_consent_flag():
+    """The escape hatch is development-only, and production says so."""
+    with pytest.raises(ValueError, match="ALLOW_MISSING_CONSENT_TEXT"):
+        Settings(**PROD, allow_missing_consent_text=True)
+
+
+def test_real_consent_text_is_present_in_this_checkout():
+    """Guards against the file being moved or renamed by a refactor."""
+    from app.services.consent import CONSENT_FILE, consent_text
+
+    assert (ROOT_DIR / CONSENT_FILE).is_file(), f"{CONSENT_FILE} is missing"
+    text = consent_text()
+    assert len(text) > 1000
+    assert "PLACEHOLDER" not in text

@@ -194,10 +194,12 @@ def check_config(base: str) -> dict | None:
     else:
         fail("consent hash matches the served text")
 
-    if "फेला परेन" in text or len(text) < 1000:
+    if "PLACEHOLDER" in text or len(text) < 1000:
         fail(
             "real consent text is deployed",
-            "serving the built-in fallback -- docs/consent-ne.md is missing",
+            "placeholder consent text is being served -- the app should refuse "
+            "to boot without docs/consent-ne.md, so ALLOW_MISSING_CONSENT_TEXT "
+            "is set. Stop collecting.",
         )
     else:
         ok("real consent text is deployed", f"{len(text)} chars, {consent.get('version')}")

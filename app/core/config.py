@@ -53,6 +53,11 @@ class Settings(BaseSettings):
 
     # --- consent ------------------------------------------------------
     consent_version: str = "2026-09-01-v1"
+    # Local development on a fork with no consent text yet. Production refuses
+    # it: a consent record hashed against placeholder text is worthless, and
+    # unlike every other misconfiguration here it cannot be repaired after the
+    # fact.
+    allow_missing_consent_text: bool = False
 
     # --- QC gate ------------------------------------------------------
     # The corpus profile decides how strict the SNR gate is.
@@ -181,6 +186,14 @@ class Settings(BaseSettings):
                 f"PUBLIC_BASE_URL is {self.public_base_url!r}, not https. "
                 "getUserMedia requires a secure context, so the microphone "
                 "would never open."
+            )
+
+        if self.allow_missing_consent_text:
+            problems.append(
+                "ALLOW_MISSING_CONSENT_TEXT is set. That serves placeholder "
+                "consent text, and every speaker recorded against it would have "
+                "a consent record pointing at wording nobody chose to show them. "
+                "It is a local-development flag only."
             )
 
         if self.secret_key.strip() == DEFAULT_SECRET_KEY or not self.secret_key.strip():

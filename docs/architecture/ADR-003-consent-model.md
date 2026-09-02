@@ -30,9 +30,27 @@ becomes visible rather than hidden. That is what turns a consent record from a
 boolean into evidence.
 
 > **`docs/consent-ne.md` is read at runtime and is deliberately not filed under
-> `docs/collection/`.** Moving it breaks speaker registration at boot. Changing
-> a single byte — including the trailing newline — makes every previously
-> recorded speaker appear to have consented to different text than they did.
+> `docs/collection/`.** Changing a single byte — including the trailing newline
+> — makes every previously recorded speaker appear to have consented to
+> different text than they did.
+
+### A missing consent file refuses the boot
+
+The loader originally returned built-in placeholder text when the file was
+absent. That meant a deleted or mis-deployed consent file **did not stop
+collection**: the app started, hashed the placeholder, and stored that hash as
+though it were the real thing. Every speaker recorded in that window would have
+consented to wording nobody chose to show them, and nothing surfaced it.
+
+Same shape as an unguarded production config — a wrong state that looks exactly
+like a working one — but in the one area with no remedy. So
+`consent_text()` now raises `ConsentTextMissing`, and
+`verify_consent_available()` runs in the app lifespan so the failure lands at
+startup rather than on the first contributor's request.
+
+`ALLOW_MISSING_CONSENT_TEXT=true` exists for local development on a fork that
+has not written its consent text yet. The placeholder it serves announces itself
+as one, and the production guard refuses the flag outright.
 
 ### Separate scopes, asked before recording
 

@@ -17,18 +17,20 @@ it is.
 reads it at runtime to compute the SHA-256 stored against every speaker record:
 
 ```python
-_CONSENT_FILE = "docs/consent-ne.md"
-path = get_settings().base_dir / _CONSENT_FILE
+CONSENT_FILE = "docs/consent-ne.md"
+path = get_settings().base_dir / CONSENT_FILE
 ```
 
 Two things follow.
 
-**Moving it breaks speaker registration.** The loader resolves that literal path
-from the repository root. If the file is not there, the app serves a built-in
-fallback consent text instead — it does not crash, which is worse, because
-collection continues against the wrong text.
-`scripts/check_deployment.py` treats the fallback as a failure for exactly this
-reason.
+**Moving it stops the app.** The loader resolves that literal path from the
+repository root, and a missing file now raises `ConsentTextMissing` during
+startup rather than substituting placeholder text.
+
+That was not always true. It originally fell back to built-in text, so a
+mis-deployed consent file did not crash anything — the app kept collecting and
+hashed the placeholder. That is strictly worse than a crash, and it is why the
+behaviour changed.
 
 **Changing one byte invalidates every existing record.** Including a trailing
 newline. The stored hash is what proves what a contributor agreed to; if the

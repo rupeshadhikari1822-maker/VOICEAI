@@ -144,6 +144,7 @@ record that cannot be defended. Read the ADR before changing any of them.
 | `echoCancellation` / `noiseSuppression` / `autoGainControl` all false | [ADR-001](docs/architecture/ADR-001-audio-capture.md) |
 | The zero-gain keepalive node to `destination` | [ADR-001](docs/architecture/ADR-001-audio-capture.md) |
 | Server computes the consent SHA; the client's is ignored | [ADR-003](docs/architecture/ADR-003-consent-model.md) |
+| A missing `docs/consent-ne.md` refuses the boot — never falls back | [ADR-003](docs/architecture/ADR-003-consent-model.md) |
 | No PII in object keys, logs or exports | [ADR-002](docs/architecture/ADR-002-storage-and-formats.md), [ADR-003](docs/architecture/ADR-003-consent-model.md) |
 | Speaker-disjoint splits | [ADR-007](docs/architecture/ADR-007-quality-gate-and-review.md) |
 | ULIDs, not sequential speaker IDs | [ADR-005](docs/architecture/ADR-005-speaker-identifiers.md) |
