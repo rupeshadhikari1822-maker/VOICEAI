@@ -240,3 +240,15 @@ footer {
   font-size: 0.8rem;
   text-align: center;
 }
+
+/* Operator-facing detail on the preflight block screen: present enough to
+   screenshot from the field, quiet enough not to alarm the contributor. */
+.hint-detail {
+  display: inline-block;
+  margin-top: 0.4rem;
+  color: var(--muted);
+  font-family: ui-monospace, "Cascadia Code", monospace;
+  font-size: 0.7rem;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}

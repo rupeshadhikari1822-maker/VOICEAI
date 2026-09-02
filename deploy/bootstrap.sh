@@ -52,7 +52,8 @@ export DEBIAN_FRONTEND=noninteractive
 apt-get update -qq
 apt-get install -y -qq \
     python3 python3-venv python3-pip git curl ca-certificates \
-    debian-keyring debian-archive-keyring apt-transport-https dnsutils
+    debian-keyring debian-archive-keyring apt-transport-https dnsutils \
+    postgresql postgresql-client libpq-dev
 
 if ! command -v caddy >/dev/null 2>&1; then
     say "installing Caddy"
@@ -92,32 +93,58 @@ if [[ ! -x "${APP_DIR}/.venv/bin/python" ]]; then
 fi
 sudo -u "${APP_USER}" "${APP_DIR}/.venv/bin/pip" install --quiet --upgrade pip
 sudo -u "${APP_USER}" "${APP_DIR}/.venv/bin/pip" install --quiet -r "${APP_DIR}/requirements.txt"
+# Production runs on Postgres; the driver is not in requirements by default
+# because development uses SQLite.
+sudo -u "${APP_USER}" "${APP_DIR}/.venv/bin/pip" install --quiet "psycopg[binary]"
 
-# --- 4. configuration ---------------------------------------------------
+# --- 4. database ---------------------------------------------------------
+# Provisioned only on the first run. If .env already names a database, whatever
+# it points at is respected and nothing here touches it.
+if [[ ! -f "${APP_DIR}/.env" ]]; then
+    say "provisioning local PostgreSQL"
+    systemctl enable --quiet --now postgresql
+    db_password="$(python3 -c 'import secrets;print(secrets.token_urlsafe(24))')"
+    if sudo -u postgres psql -tAc "SELECT 1 FROM pg_roles WHERE rolname='voice'" | grep -q 1; then
+        sudo -u postgres psql -qc "ALTER ROLE voice WITH PASSWORD '${db_password}';"
+        echo "  role 'voice' existed; password rotated"
+    else
+        sudo -u postgres psql -qc "CREATE ROLE voice LOGIN PASSWORD '${db_password}';"
+        echo "  role 'voice' created"
+    fi
+    if ! sudo -u postgres psql -tAc "SELECT 1 FROM pg_database WHERE datname='voice'" | grep -q 1; then
+        sudo -u postgres createdb -O voice voice
+        echo "  database 'voice' created"
+    fi
+fi
+
+# --- 5. configuration ---------------------------------------------------
 if [[ ! -f "${APP_DIR}/.env" ]]; then
     say "creating ${APP_DIR}/.env from the template"
     cp "${APP_DIR}/deploy/env.production.example" "${APP_DIR}/.env"
     chown "${APP_USER}:${APP_USER}" "${APP_DIR}/.env"
     chmod 600 "${APP_DIR}/.env"
-    # Generate the one secret that has no reason to be chosen by hand.
+    # Generate the two secrets that have no reason to be chosen by hand.
     generated="$(python3 -c 'import secrets;print(secrets.token_hex(32))')"
     sed -i "s|^SECRET_KEY=CHANGE_ME|SECRET_KEY=${generated}|" "${APP_DIR}/.env"
-    echo "  SECRET_KEY generated"
+    sed -i "s|^DATABASE_URL=postgresql+psycopg://voice:PASSWORD@localhost:5432/voice|DATABASE_URL=postgresql+psycopg://voice:${db_password}@localhost:5432/voice|" "${APP_DIR}/.env"
+    echo "  SECRET_KEY generated, DATABASE_URL wired to local Postgres"
 else
     chmod 600 "${APP_DIR}/.env"
     echo "  ${APP_DIR}/.env already exists, left untouched"
 fi
 
-# --- 5. system units ----------------------------------------------------
+# --- 6. system units ----------------------------------------------------
 say "installing systemd unit and Caddy config"
 install -m 644 "${APP_DIR}/deploy/voice-recorder.service" /etc/systemd/system/voice-recorder.service
 install -d -o caddy -g caddy /var/log/caddy
 install -m 644 "${APP_DIR}/deploy/Caddyfile" /etc/caddy/Caddyfile
 systemctl daemon-reload
 
-# --- 6. refuse to start half-configured ---------------------------------
+# --- 7. refuse to start half-configured ---------------------------------
 missing=()
 grep -q '^SECRET_KEY=CHANGE_ME' "${APP_DIR}/.env" && missing+=("SECRET_KEY")
+grep -q '@localhost:5432/voice' "${APP_DIR}/.env" \
+    && grep -q 'PASSWORD@localhost' "${APP_DIR}/.env" && missing+=("DATABASE_URL password")
 grep -q '^STORAGE_BACKEND=s3' "${APP_DIR}/.env" && {
     grep -qE '^S3_ACCESS_KEY_ID=.+' "${APP_DIR}/.env" || missing+=("S3_ACCESS_KEY_ID")
     grep -qE '^S3_SECRET_ACCESS_KEY=.+' "${APP_DIR}/.env" || missing+=("S3_SECRET_ACCESS_KEY")
@@ -144,7 +171,7 @@ MSG
     exit 1
 fi
 
-# --- 7. database and prompts -------------------------------------------
+# --- 8. database and prompts -------------------------------------------
 say "applying migrations"
 sudo -u "${APP_USER}" env -C "${APP_DIR}" "${APP_DIR}/.venv/bin/python" scripts/init_db.py
 
@@ -152,7 +179,7 @@ say "importing prompts"
 sudo -u "${APP_USER}" env -C "${APP_DIR}" "${APP_DIR}/.venv/bin/python" \
     scripts/import_prompts.py data/prompts_ne.jsonl
 
-# --- 8. start -----------------------------------------------------------
+# --- 9. start -----------------------------------------------------------
 say "starting services"
 systemctl enable --quiet --now voice-recorder
 systemctl restart voice-recorder
@@ -174,8 +201,8 @@ cat <<MSG
 
       python scripts/check_deployment.py https://${DOMAIN}
 
-  Then record one sentence on a real phone over mobile data. That
-  step is not optional: bucket CORS is enforced by the browser, so
-  every server-side check passes while a real phone still fails.
+  Then record one sentence on a real phone over mobile data. The
+  in-app storage preflight will block the session with a named error
+  if bucket CORS is wrong, but only a real browser exercises it.
 ------------------------------------------------------------------
 MSG

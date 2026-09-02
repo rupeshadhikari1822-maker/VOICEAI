@@ -11,6 +11,7 @@ import hashlib
 import hmac
 import shutil
 import time
+from collections.abc import Iterator
 from pathlib import Path
 from urllib.parse import urlencode
 
@@ -100,6 +101,14 @@ class LocalStorage(BaseStorage):
 
     def delete(self, key: str) -> None:
         self._path(key).unlink(missing_ok=True)
+
+    def list_keys(self, prefix: str = "") -> Iterator[tuple[str, int]]:
+        root = self.root / prefix if prefix else self.root
+        base = self.root
+        if root.is_dir():
+            for path in sorted(root.rglob("*")):
+                if path.is_file():
+                    yield path.relative_to(base).as_posix(), path.stat().st_size
 
     def delete_prefix(self, prefix: str) -> int:
         target = self._path(prefix)

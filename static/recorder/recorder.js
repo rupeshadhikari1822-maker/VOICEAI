@@ -7,6 +7,7 @@
  */
 
 import { Recorder, encodeWav, analyze, gate, dbfs } from '/static/recorder/audio.js';
+import { runPreflight } from '/static/recorder/preflight.js';
 
 const $ = (sel) => document.querySelector(sel);
 const $$ = (sel) => Array.from(document.querySelectorAll(sel));
@@ -145,12 +146,51 @@ $('#profile-form').addEventListener('submit', async (event) => {
     });
     state.sessionId = session.session_id;
 
+    // Prove uploads work BEFORE anyone reads a sentence aloud. A CORS
+    // misconfiguration is invisible to every server-side check, and without
+    // this it surfaces only after twenty minutes of recording.
+    setStatus(status, 'अपलोड जाँच गर्दै…');
+    const preflight = await runPreflight();
+    if (!preflight.ok) {
+      blockOnStorage(preflight);
+      return;
+    }
+    if (preflight.sameOrigin) {
+      // Local backend: the PUT never crossed an origin, so it proved nothing
+      // about a bucket. Do not let a green check imply otherwise.
+      console.warn(
+        '[preflight] local storage backend: CORS was not exercised. ' +
+          'This check only means something against S3/R2.',
+      );
+    }
+
     setStatus(status, '');
     $('#speaker-id').textContent = state.speakerId;
     showStep('miccheck');
   } catch (err) {
     setStatus(status, `पठाउन सकिएन: ${err.message}`, 'error');
     button.disabled = false;
+  }
+});
+
+/** Stop the session. The contributor cannot fix CORS or credentials. */
+function blockOnStorage(preflight) {
+  showStep('blocked');
+  $('#blocked-message').textContent = preflight.message;
+  $('#blocked-code').textContent = preflight.code;
+  $('#blocked-hint').textContent = `${preflight.hint} (${preflight.detail})`;
+  // Network problems are the one case worth retrying from the device.
+  $('#blocked-retry').hidden = preflight.code !== 'STORAGE_NETWORK';
+  console.error('[preflight]', preflight.code, preflight.detail);
+}
+
+$('#blocked-retry').addEventListener('click', async () => {
+  const again = await runPreflight();
+  if (again.ok) {
+    $('#speaker-id').textContent = state.speakerId;
+    showStep('miccheck');
+  } else {
+    blockOnStorage(again);
   }
 });
 

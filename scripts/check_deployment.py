@@ -245,6 +245,32 @@ def check_storage_and_secrets(base: str) -> None:
     else:
         warn("storage backend is S3/R2", f"unexpected HTTP {status}")
 
+    # The preflight is what protects a contributor from a CORS misconfiguration
+    # that nothing here can see. Its absence means the deployed code predates it.
+    status, _h, body = get(urljoin(base, "/api/storage/preflight"))
+    if status == 200:
+        preflight = json.loads(body)
+        if preflight.get("same_origin"):
+            fail(
+                "storage preflight exercises a real bucket",
+                "same-origin probe -- backend is local, so CORS is never tested",
+            )
+        else:
+            ok("storage preflight is live", f"probes {preflight.get('probe_bytes')} B")
+        if preflight.get("environment") == "production":
+            ok("ENVIRONMENT=production", "startup guard is active")
+        else:
+            warn(
+                "ENVIRONMENT=production",
+                f"reports {preflight.get('environment')!r}; the startup guard is off",
+            )
+    else:
+        fail(
+            "storage preflight is live",
+            f"HTTP {status} -- deployed code predates the preflight, so a CORS "
+            "problem would surface only after a contributor records",
+        )
+
     status, _h, _b = get(urljoin(base, "/api/review/next"))
     if status == 401:
         ok("/review is gated", "401 without a token")
@@ -425,8 +451,11 @@ def main() -> int:
 
     print("\n  Still unverified by this script: bucket CORS.")
     print("  It is enforced by the browser, so everything above can pass while")
-    print("  a real phone fails on the first upload. Record one sentence on a")
-    print("  real device over mobile data before linking the landing page.")
+    print("  a real phone fails on the first upload. The in-app preflight will")
+    print("  block that session with a named error rather than letting someone")
+    print("  record twenty-five sentences that cannot upload -- but only a real")
+    print("  browser exercises it. Record one sentence on a real device over")
+    print("  mobile data before linking the landing page.")
     print("=" * 66)
     return 1 if _FAIL else 0
 

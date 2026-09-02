@@ -38,6 +38,9 @@ less bootstrap.sh          # read it before running it as root
 sudo bash bootstrap.sh
 ```
 
+It installs Caddy and PostgreSQL, provisions a `voice` database with a
+generated password, creates the systemd unit, and wires `.env`.
+
 It is idempotent — re-run it to deploy a new commit. On the first run it stops
 deliberately after writing `/srv/voice/.env`, because the bucket credentials
 cannot be guessed:
@@ -49,6 +52,12 @@ sudo bash /srv/voice/deploy/bootstrap.sh
 
 A public recorder that is up but misconfigured is worse than one that is not up
 yet: it collects clips it cannot store.
+
+The app backstops this. With `ENVIRONMENT=production` set, it **refuses to
+boot** on local storage, SQLite, a non-https `PUBLIC_BASE_URL`, or the default
+`SECRET_KEY`, and reports every problem at once rather than one per restart.
+SQLite is allowed for a single-contributor pilot only if you set
+`ALLOW_SQLITE_IN_PRODUCTION=true` deliberately.
 
 ## 3. Bucket CORS — the step that always bites
 
@@ -69,6 +78,30 @@ reaches storage. R2 → your bucket → Settings → CORS policy:
 ```
 
 Keep the bucket **private**. Presigned URLs are the only read and write path.
+
+Add a lifecycle rule expiring the `_preflight/` prefix after one day. The
+in-app storage preflight writes a 1 KB probe object there at the start of every
+session; they carry no contributor data, but there is no reason to keep them.
+
+### The preflight is what protects the contributor
+
+`check_deployment.py` cannot test CORS, so the app tests it itself. At session
+start — before a single sentence is read — the recorder performs a real
+cross-origin PUT of 1 KB. If it fails, the session is blocked with a named
+error rather than letting someone record twenty-five clips that cannot upload:
+
+| Code | Meaning | Who can fix it |
+|---|---|---|
+| `STORAGE_CORS` | Bucket rejected the browser | You. Fix the CORS policy above. |
+| `STORAGE_AUTH` | Bucket reached, signature refused | You. Bad credentials, or server clock skew. |
+| `STORAGE_NETWORK` | Device has no connectivity | The contributor. Retry button is shown. |
+
+A CORS rejection and a network failure produce the same opaque error in the
+fetch API by design. The recorder separates them by asking whether its own
+origin is still reachable: if it is, the network is fine and the bucket is the
+problem. For `STORAGE_CORS` and `STORAGE_AUTH` the contributor is told plainly
+that it is not their fault and not their internet — blaming a reader for our
+misconfiguration is how you lose them.
 
 ## 4. Verify from outside
 
@@ -150,16 +183,30 @@ sudo -u voice .venv/bin/python scripts/withdraw.py <speaker_id> --dry-run
 sudo -u voice .venv/bin/python scripts/withdraw.py <speaker_id> --confirm
 ```
 
-## Backups
+## Backups and audit
 
-The 48 kHz masters under `raw/` are the irreplaceable part — everything under
-`derived/` regenerates from them. Enable object versioning on the bucket, and
-keep a second copy:
+R2 alone is not a backup. It protects against a disk failing; it does not
+protect against a script deleting the wrong prefix, a leaked credential, or an
+account problem. A bad `delete_prefix` removes audio exactly as thoroughly as a
+dead drive, and the speakers have gone home.
+
+```bash
+# Audit: does every clip row have an object, and every object a row?
+sudo -u voice /srv/voice/.venv/bin/python scripts/backup_corpus.py --verify
+
+# Copy down what cannot be regenerated: raw/ masters, consent clips, database.
+sudo -u voice /srv/voice/.venv/bin/python scripts/backup_corpus.py --dest /mnt/backup/voice
+```
+
+The audit is worth running on its own schedule. It catches rows whose audio is
+missing (they fail at export), objects with no row (audio that cannot be tied to
+a consent record — a privacy problem, not a storage one), and withdrawn clips
+whose objects were never actually deleted (a promise to a contributor left
+unkept).
+
+`derived/` is deliberately excluded from the copy; `export_dataset.py` rebuilds
+it. Enable object versioning on the bucket, and keep an offsite second copy:
 
 ```bash
 rclone sync r2:voice-corpus/raw b2:voice-corpus-archive/raw
 ```
-
-Back up `/srv/voice/voice.db` too. It holds the transcripts, the QC verdicts and
-the consent records; audio with no transcript and no consent record is not a
-dataset.

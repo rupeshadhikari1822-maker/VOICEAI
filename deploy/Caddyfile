@@ -22,6 +22,10 @@ record.cloudfrm.ai {
 		# The recorder needs the mic; nothing here needs camera or geolocation.
 		Permissions-Policy "microphone=(self), camera=(), geolocation=()"
 		X-Frame-Options "DENY"
+		# The recording link goes to specific people. An indexed consent flow
+		# collects junk sessions and puts the consent text in search results
+		# out of context.
+		X-Robots-Tag "noindex, nofollow"
 		-Server
 	}
 

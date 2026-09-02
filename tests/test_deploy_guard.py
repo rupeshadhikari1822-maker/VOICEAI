@@ -1,0 +1,166 @@
+"""The production startup guard and the storage preflight.
+
+Both exist for the same reason: a misconfiguration that no server-side check
+notices, discovered only when a real contributor loses a session to it.
+"""
+
+from __future__ import annotations
+
+import pytest
+
+from app.core.config import DEFAULT_SECRET_KEY, Settings
+
+PROD = {
+    "environment": "production",
+    "storage_backend": "s3",
+    "database_url": "postgresql+psycopg://u:p@localhost/voice",
+    "public_base_url": "https://record.cloudfrm.ai",
+    "secret_key": "a" * 64,
+}
+
+
+# --- B1: startup guard --------------------------------------------------
+
+
+def test_a_correct_production_config_boots():
+    settings = Settings(**PROD)
+    assert settings.is_production
+
+
+def test_development_is_never_guarded():
+    """Local development must keep working with settings production forbids."""
+    settings = Settings(
+        environment="development",
+        storage_backend="local",
+        database_url="sqlite:///voice.db",
+        public_base_url="http://localhost:8000",
+        secret_key=DEFAULT_SECRET_KEY,
+    )
+    assert settings.is_production is False
+
+
+def test_production_refuses_local_storage():
+    with pytest.raises(ValueError, match="STORAGE_BACKEND"):
+        Settings(**{**PROD, "storage_backend": "local"})
+
+
+def test_production_refuses_plain_http():
+    """getUserMedia needs a secure context; http means the mic never opens."""
+    with pytest.raises(ValueError, match="PUBLIC_BASE_URL"):
+        Settings(**{**PROD, "public_base_url": "http://record.cloudfrm.ai"})
+
+
+def test_production_refuses_the_default_secret():
+    with pytest.raises(ValueError, match="SECRET_KEY"):
+        Settings(**{**PROD, "secret_key": DEFAULT_SECRET_KEY})
+
+
+def test_production_refuses_an_empty_secret():
+    with pytest.raises(ValueError, match="SECRET_KEY"):
+        Settings(**{**PROD, "secret_key": "   "})
+
+
+def test_production_refuses_sqlite_by_default():
+    with pytest.raises(ValueError, match="SQLite"):
+        Settings(**{**PROD, "database_url": "sqlite:///voice.db"})
+
+
+def test_sqlite_allowed_only_with_the_explicit_pilot_opt_out():
+    settings = Settings(
+        **{**PROD, "database_url": "sqlite:///voice.db"},
+        allow_sqlite_in_production=True,
+    )
+    assert settings.is_production
+
+
+def test_every_problem_is_reported_at_once():
+    """Finding a second fault after fixing the first wastes a deploy."""
+    with pytest.raises(ValueError) as exc:
+        Settings(
+            environment="production",
+            storage_backend="local",
+            database_url="sqlite:///voice.db",
+            public_base_url="http://record.cloudfrm.ai",
+            secret_key=DEFAULT_SECRET_KEY,
+        )
+    message = str(exc.value)
+    for expected in ("STORAGE_BACKEND", "SQLite", "PUBLIC_BASE_URL", "SECRET_KEY"):
+        assert expected in message, f"{expected} missing from the guard output"
+    assert "4." in message, "should enumerate all four"
+
+
+@pytest.mark.parametrize("value", ["production", "PRODUCTION", " prod "])
+def test_production_is_recognised_case_and_space_insensitively(value):
+    with pytest.raises(ValueError):
+        Settings(**{**PROD, "environment": value, "storage_backend": "local"})
+
+
+@pytest.mark.parametrize("value", ["development", "staging", "", "dev"])
+def test_non_production_environments_are_not_guarded(value):
+    """Only 'production' locks down; staging should stay convenient."""
+    assert Settings(environment=value, storage_backend="local").is_production is False
+
+
+# --- B2: storage preflight ----------------------------------------------
+
+
+def test_preflight_returns_a_usable_presigned_put(client):
+    body = client.get("/api/storage/preflight").json()
+    assert body["method"] == "PUT"
+    assert body["probe_bytes"] == 1024
+    assert body["url"]
+    assert body["headers"]["Content-Type"] == "application/octet-stream"
+    assert body["expires_at"] > 0
+
+
+def test_preflight_probe_is_outside_every_export_prefix(client):
+    """A probe object must never be mistaken for corpus audio."""
+    from urllib.parse import parse_qs, urlparse
+
+    body = client.get("/api/storage/preflight").json()
+    key = parse_qs(urlparse(body["url"]).query)["key"][0]
+    assert key.startswith("_preflight/")
+    for corpus_prefix in ("raw/", "derived/", "consent/"):
+        assert not key.startswith(corpus_prefix)
+
+
+def test_preflight_admits_when_it_proves_nothing(client):
+    """On the local backend the PUT is same-origin and exercises no CORS."""
+    body = client.get("/api/storage/preflight").json()
+    assert body["same_origin"] is True
+    assert body["backend"] == "local"
+
+
+def test_preflight_names_a_control_url_for_disambiguation(client):
+    """A CORS rejection and a network failure are the same opaque TypeError.
+
+    The client separates them by asking whether our own origin is reachable,
+    so the endpoint has to tell it where to ask.
+    """
+    body = client.get("/api/storage/preflight").json()
+    assert body["control_url"] == "/healthz"
+    assert client.get(body["control_url"]).status_code == 200
+
+
+def test_the_preflight_put_actually_works(client):
+    """End to end: the URL handed out is genuinely writable."""
+    from urllib.parse import urlparse
+
+    body = client.get("/api/storage/preflight").json()
+    parsed = urlparse(body["url"])
+    res = client.put(
+        f"{parsed.path}?{parsed.query}",
+        content=b"\x00" * body["probe_bytes"],
+        headers=body["headers"],
+    )
+    assert res.status_code == 200
+
+
+def test_each_preflight_uses_a_fresh_key(client):
+    from urllib.parse import parse_qs, urlparse
+
+    keys = {
+        parse_qs(urlparse(client.get("/api/storage/preflight").json()["url"]).query)["key"][0]
+        for _ in range(3)
+    }
+    assert len(keys) == 3, "probe keys must not collide between sessions"

@@ -31,7 +31,14 @@ and Postgres in production.
    Showing SNR anchors the reviewer into passing; showing the ASR transcript
    means they review the transcript instead of the audio. Both are returned in
    the verdict response, which is where they help.
-8. **Review history is append-only.** Every verdict writes a `ReviewEvent` as
+8. **The production guard must not be weakened.** With `ENVIRONMENT=production`,
+   `app/core/config.py` refuses to boot on local storage, SQLite, a non-https
+   base URL, or the default secret. Do not add silent fallbacks to it.
+9. **Never let a contributor record before the storage preflight passes.**
+   Bucket CORS cannot be tested server-side, so the recorder proves uploads
+   work with a real cross-origin PUT at session start. Removing that check
+   trades a clear error for twenty-five wasted sentences.
+10. **Review history is append-only.** Every verdict writes a `ReviewEvent` as
    well as updating `Clip.verify_status`. Never update or delete an event -- a
    changed verdict is a new row. Undo is scoped to the caller's own last one.
 
@@ -84,6 +91,7 @@ python scripts/export_dataset.py --format asr --sr 16000 --out export_out/asr
 python scripts/asr_prefilter.py --dry-run       # optional; shrinks the review queue
 python scripts/prompt_health.py                 # prompts several people misread
 python scripts/check_deployment.py https://record.cloudfrm.ai
+python scripts/backup_corpus.py --verify         # rows vs objects audit
 ```
 
 Deployment target is **record.cloudfrm.ai** (the studio). `voice.cloudfrm.ai` is

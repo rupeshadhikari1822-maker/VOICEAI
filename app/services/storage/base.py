@@ -7,6 +7,7 @@ landed. Every backend must preserve that property.
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from dataclasses import dataclass
 
 WAV_CONTENT_TYPE = "audio/wav"
@@ -63,4 +64,13 @@ class BaseStorage:
         raise NotImplementedError
 
     def delete_prefix(self, prefix: str) -> int:
+        raise NotImplementedError
+
+    def list_keys(self, prefix: str = "") -> "Iterator[tuple[str, int]]":
+        """Yield (key, size_bytes) under a prefix.
+
+        Needed by scripts/backup_corpus.py, which has to answer two questions
+        the database alone cannot: is every clip row backed by a real object,
+        and is every object accounted for by a row.
+        """
         raise NotImplementedError

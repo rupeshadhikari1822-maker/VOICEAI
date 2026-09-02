@@ -8,6 +8,7 @@ during training.
 from __future__ import annotations
 
 import time
+from collections.abc import Iterator
 
 from app.core.config import Settings
 from app.services.storage.base import (
@@ -87,6 +88,12 @@ class S3Storage(BaseStorage):
 
     def delete(self, key: str) -> None:
         self.client.delete_object(Bucket=self.bucket, Key=key)
+
+    def list_keys(self, prefix: str = "") -> Iterator[tuple[str, int]]:
+        paginator = self.client.get_paginator("list_objects_v2")
+        for page in paginator.paginate(Bucket=self.bucket, Prefix=prefix):
+            for obj in page.get("Contents", []):
+                yield obj["Key"], obj["Size"]
 
     def delete_prefix(self, prefix: str) -> int:
         paginator = self.client.get_paginator("list_objects_v2")
