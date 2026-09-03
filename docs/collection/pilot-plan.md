@@ -13,9 +13,9 @@ small enough to apologise to individually.
 - [ ] Try one Android and one iPhone if both are available. An iPhone-only
       failure isolates to the platform immediately; a single-device failure
       could be anything.
-- [ ] `docs/consent-ne.md` reviewed by a Nepali lawyer **if** the dataset may
-      ever be licensed commercially. The commercial opt-in cannot be
-      retro-fitted.
+- [ ] `docs/consent-ne.md` reviewed by a Nepali lawyer before collection. The
+      active consent is a commercial rights assignment, and it cannot be
+      retro-fitted after recording.
 - [ ] Object versioning on the bucket.
 - [ ] Someone named who can action a withdrawal request within a few days.
 

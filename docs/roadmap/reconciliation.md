@@ -8,6 +8,44 @@ sections describe approaches that were considered and deliberately rejected;
 following them literally would damage the corpus in ways the section text does
 not reveal.
 
+## Three tiers
+
+This table separates what blocks the first real recording from work that can
+land later. Use this framing when reporting status: a flat list makes a broken
+storage credential look equivalent to a future GPU integration, and they are
+not the same kind of problem.
+
+### Tier 1 -- blocks the pilot
+
+Nothing works without these. Finish these before calling MVP-01 complete.
+
+| Item | Status | Proof needed |
+|---|---|---|
+| Production storage credentials | **Open** | Confirm the Access Key ID in `/srv/voice/.env` belongs to a key that has the `voice-corpus` bucket attached with Read/Write permission in the provider panel. If the key is unscoped, create a new scoped key and enter the new ID and secret together. Then run `python scripts/verify_storage_credentials.py` on the deployed host so the live credentials perform a real PUT, GET and DELETE against the bucket. `check_deployment.py` alone is not proof: presigning is local cryptography and can pass with bad credentials. |
+| Bucket CORS | **Open** | Confirm the actual provider from `S3_ENDPOINT_URL`, then add CORS allowing `PUT` and `GET` from `https://record.cloudfrm.ai` with `content-type` allowed. Python cannot verify CORS because browsers enforce it; do not report this done from a server-side check. |
+| Real phone recording | **Open** | Rupesh must use an Android phone on mobile data, open `https://record.cloudfrm.ai`, screenshot the mic-check screen, record one full sentence, submit it, and confirm the review flow can play the landed object with correct metadata. This is the end-to-end proof. |
+
+### Tier 2 -- land before the pilot, does not block starting it
+
+Cheap, real improvements. Do these after Tier 1 is proven, not instead of it.
+
+| Item | Status | Notes |
+|---|---|---|
+| Consent page Markdown rendering | **Done** | The recorder renders `docs/consent-ne.md` as presentable HTML while the server still hashes the exact Markdown text. |
+| Rate limiting | **Open** | Add limits for `POST /api/speakers` and `POST /api/clips/init` before a public link. |
+| Session recovery on refresh | **Open** | Persist `session_id` and current prompt index client-side. This is not sensitive data, and it prevents losing a volunteer's in-progress session. |
+| Retention policy | **Open** | Decide and document raw audio, PII and rejected-clip retention in `docs/consent-ne.md` with Rupesh's explicit sign-off, because the consent hash changes. |
+| Backup confirmation | **Open** | Run `scripts/backup_corpus.py` for real against production storage and keep the output. Fixture tests are not a production backup check. |
+
+### Tier 3 -- do not touch until Tier 1 has run against real speakers
+
+These are explicitly out of scope for the current job. If they appear while
+fixing Tier 1 or Tier 2, record them as dependencies instead of building them.
+
+| Item | Status | Boundary |
+|---|---|---|
+| Admin dashboard, research dashboard, full RBAC, Docker/GitHub Actions, Redis/queue architecture, FFmpeg async pipeline, ASR/TTS training, CloudFARM GPU integration, RAG, Himalaya Voice Engine, dataset versioning beyond current exports, staging environment | **Deferred** | Do not start without an explicit new task after Tier 1 has been phone-verified. |
+
 ## Status meanings
 
 | Status | Meaning |
@@ -116,7 +154,7 @@ All 72 sections are reviewed below.
 
 | § | Topic | Status | Notes |
 |---|---|---|---|
-| 61 | IP: participant → dataset → model → commercial rights | **Partial** | Consent separates research from commercial use, and commercial use is a distinct opt-in that cannot be retro-fitted. **Model ownership and downstream licensing are not addressed** — a legal question, not a code one. The roadmap's own advice to have the framework reviewed for the jurisdiction stands. |
+| 61 | IP: participant → dataset → model → commercial rights | **Partial** | The active consent version requires commercial rights assignment for participation and stores that scope on `ConsentRecord`. **Model ownership and downstream licensing are still legal questions, not code ones.** The roadmap's own advice to have the framework reviewed for the jurisdiction stands. |
 | 62 | Phases 1–9 | **Partial** | Phase 1 mostly (no Docker, no auth beyond reviewer tokens). Phase 2 fully. Phase 3 partly (§24). Phase 4 differently (§20). Phase 5 as CLI, not dashboard (§36). Phase 6 mostly, minus versioning (§29). Phases 7–9 deferred. |
 | 63 | MVP definition | **Built, exceeded** | Every step in the MVP chain works, plus automated QC — which §63 says to add *after* the MVP works. |
 | 64 | First pilot: 50 speakers | **Ready, not run** | [pilot-plan.md](../collection/pilot-plan.md). The roadmap's framing — the pilot validates UX and reliability, **not** model training — is adopted verbatim. |

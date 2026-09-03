@@ -344,7 +344,7 @@ def check_round_trip(base: str) -> None:
         {
             "name": None,
             "mother_tongue": "नेपाली",
-            "consent": {"version": version, "accepted": True, "commercial_use": False},
+            "consent": {"version": version, "accepted": True, "commercial_use": True},
         }
     ).encode()
     status, _h, body = get(

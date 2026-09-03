@@ -56,7 +56,7 @@ class LocalStorage(BaseStorage):
             {"key": key, "expires": expires_at, "sig": self.sign(key, expires_at)}
         )
         return PresignedUpload(
-            url=f"{self.settings.public_base_url.rstrip('/')}/api/_local_upload?{query}",
+            url=f"/api/_local_upload?{query}",
             method="PUT",
             headers={"Content-Type": content_type},
             key=key,
@@ -70,9 +70,8 @@ class LocalStorage(BaseStorage):
         query = urlencode(
             {"key": key, "expires": expires_at, "sig": self.sign(key, expires_at)}
         )
-        base = self.settings.public_base_url.rstrip("/")
         return PresignedTarget(
-            url=f"{base}/api/_local_download?{query}", expires_at=expires_at
+            url=f"/api/_local_download?{query}", expires_at=expires_at
         )
 
     def local_path(self, key: str) -> Path:

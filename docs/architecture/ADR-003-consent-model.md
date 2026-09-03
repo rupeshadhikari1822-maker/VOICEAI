@@ -52,14 +52,19 @@ startup rather than on the first contributor's request.
 has not written its consent text yet. The placeholder it serves announces itself
 as one, and the production guard refuses the flag outright.
 
-### Separate scopes, asked before recording
+### Commercial assignment, asked before recording
 
-Commercial use is a separate opt-in checkbox, not bundled into general consent.
-It is asked before the first recording because **it cannot be retro-fitted**.
-There is no mechanism to go back to fifty contributors and obtain a permission
-you did not ask for, and using the audio without it is not an option.
+As of consent version `2026-09-02-commercial-v1`, participation requires the
+bilingual absolute assignment and commercial consent in `docs/consent-ne.md`.
+The UI no longer presents commercial use as an optional checkbox, and the server
+rejects `commercial_use=false` for new speaker registration. This changed by
+explicit product/legal instruction; do not silently revert it to the previous
+optional opt-in model.
 
-Declining commercial use does not exclude a contributor from participating.
+It is still asked before the first recording because **it cannot be
+retro-fitted**. There is no mechanism to go back to fifty contributors and
+obtain a permission you did not ask for, and using the audio without it is not
+an option.
 
 ### Caste and ethnicity
 
@@ -104,7 +109,7 @@ tombstoned rows holding nothing, which is evidence rather than faith.
 
 ## Enforced by
 
-- `tests/test_smoke.py` — consent required, stale version refused, hash matches
-  served text, export rows carry no PII
+- `tests/test_smoke.py` — consent required, commercial assignment required,
+  stale version refused, hash matches served text, export rows carry no PII
 - `scripts/check_deployment.py` — deployed consent hash vs. this checkout
 - `CLAUDE.md` rules 4 and 5

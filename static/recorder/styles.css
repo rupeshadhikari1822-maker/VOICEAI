@@ -78,9 +78,18 @@ code {
   padding: 1rem;
   max-height: 22rem;
   overflow-y: auto;
-  white-space: pre-wrap;
   font-size: 0.9rem;
 }
+
+.consent-box h3,
+.consent-box h4,
+.consent-box h5 { margin: 1.1rem 0 0.45rem; line-height: 1.35; }
+.consent-box h3:first-child { margin-top: 0; }
+.consent-box p { margin: 0.6rem 0; }
+.consent-box hr { border: 0; border-top: 1px solid var(--border); margin: 1rem 0; }
+.consent-box blockquote { border-left: 3px solid var(--accent); margin: 0.8rem 0; padding-left: 0.8rem; color: var(--muted); }
+.consent-box table { width: 100%; border-collapse: collapse; margin: 0.8rem 0; font-size: 0.82rem; }
+.consent-box td { border: 1px solid var(--border); padding: 0.45rem 0.55rem; vertical-align: top; }
 
 .check {
   display: flex;

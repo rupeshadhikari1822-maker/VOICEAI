@@ -8,7 +8,7 @@ from app.schemas.common import UploadTarget
 class ConsentIn(BaseModel):
     version: str
     accepted: bool
-    # Separate opt-in. Asked before recording because it cannot be added later.
+    # The active consent requires commercial assignment for participation.
     commercial_use: bool = False
 
 

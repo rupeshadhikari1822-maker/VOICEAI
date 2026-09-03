@@ -32,7 +32,8 @@ class ConsentRecord(Base):
     version: Mapped[str] = mapped_column(String(40))
     text_sha256: Mapped[str] = mapped_column(String(64))
     accepted_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
-    # Separate opt-in. Cannot be retro-fitted, so it is asked before recording.
+    # The current consent is a mandatory commercial assignment; older records
+    # preserve the scope that was accepted at their own version.
     commercial_use: Mapped[bool] = mapped_column(Boolean, default=False)
     spoken_clip_key: Mapped[str | None] = mapped_column(String(400))
 

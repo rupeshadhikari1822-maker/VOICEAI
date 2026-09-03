@@ -63,7 +63,7 @@ async function boot() {
     return;
   }
 
-  $('#consent-text').textContent = state.config.consent.text;
+  $('#consent-text').innerHTML = renderConsentMarkdown(state.config.consent.text);
   $('#consent-version').textContent = state.config.consent.version;
   $('#spec-sr').textContent = `${state.config.audio.sample_rate / 1000} kHz`;
   $('#spec-snr').textContent = `${state.config.qc.min_snr_db} dB`;
@@ -125,7 +125,7 @@ $('#profile-form').addEventListener('submit', async (event) => {
     consent: {
       version: state.config.consent.version,
       accepted: $('#consent-agree').checked,
-      commercial_use: $('#consent-commercial').checked,
+      commercial_use: true,
     },
   };
 
@@ -467,3 +467,107 @@ $('#accept').addEventListener('click', async () => {
 });
 
 boot();
+
+function escapeHtml(text) {
+  return text
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;');
+}
+
+function inlineMarkdown(text) {
+  return escapeHtml(text)
+    .replace(/`([^`]+)`/g, '<code>$1</code>')
+    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*([^*]+)\*/g, '<em>$1</em>');
+}
+
+function renderConsentMarkdown(markdown) {
+  const lines = markdown.split(/\r?\n/);
+  const html = [];
+  let paragraph = [];
+  let list = [];
+  let quote = [];
+  let table = [];
+
+  const flushParagraph = () => {
+    if (!paragraph.length) return;
+    html.push(`<p>${inlineMarkdown(paragraph.join(' '))}</p>`);
+    paragraph = [];
+  };
+  const flushList = () => {
+    if (!list.length) return;
+    html.push(`<ul>${list.map((item) => `<li>${inlineMarkdown(item)}</li>`).join('')}</ul>`);
+    list = [];
+  };
+  const flushQuote = () => {
+    if (!quote.length) return;
+    html.push(`<blockquote>${quote.map((line) => `<p>${inlineMarkdown(line)}</p>`).join('')}</blockquote>`);
+    quote = [];
+  };
+  const flushTable = () => {
+    if (!table.length) return;
+    const rows = table.filter((row) => !/^\|\s*-+\s*\|/.test(row));
+    html.push(`<table><tbody>${rows.map((row) => {
+      const cells = row.slice(1, -1).split('|').map((cell) => `<td>${inlineMarkdown(cell.trim())}</td>`).join('');
+      return `<tr>${cells}</tr>`;
+    }).join('')}</tbody></table>`);
+    table = [];
+  };
+  const flushAll = () => {
+    flushParagraph();
+    flushList();
+    flushQuote();
+    flushTable();
+  };
+
+  for (const rawLine of lines) {
+    const line = rawLine.trim();
+    if (!line) {
+      flushAll();
+      continue;
+    }
+    if (line === '---') {
+      flushAll();
+      html.push('<hr>');
+      continue;
+    }
+    const heading = /^(#{1,3})\s+(.+)$/.exec(line);
+    if (heading) {
+      flushAll();
+      const level = heading[1].length + 2;
+      html.push(`<h${level}>${inlineMarkdown(heading[2])}</h${level}>`);
+      continue;
+    }
+    if (/^\|.*\|$/.test(line)) {
+      flushParagraph();
+      flushList();
+      flushQuote();
+      table.push(line);
+      continue;
+    }
+    if (line.startsWith('- ')) {
+      flushParagraph();
+      flushQuote();
+      flushTable();
+      list.push(line.slice(2));
+      continue;
+    }
+    if (line.startsWith('>')) {
+      flushParagraph();
+      flushList();
+      flushTable();
+      quote.push(line.replace(/^>\s?/, ''));
+      continue;
+    }
+    flushList();
+    flushQuote();
+    flushTable();
+    paragraph.push(line);
+  }
+  flushAll();
+
+  return html.join('');
+}

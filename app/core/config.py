@@ -52,7 +52,7 @@ class Settings(BaseSettings):
     max_clip_bytes: int = 40 * 1024 * 1024
 
     # --- consent ------------------------------------------------------
-    consent_version: str = "2026-09-01-v1"
+    consent_version: str = "2026-09-02-commercial-v1"
     # Local development on a fork with no consent text yet. Production refuses
     # it: a consent record hashed against placeholder text is worthless, and
     # unlike every other misconfiguration here it cannot be repaired after the

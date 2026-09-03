@@ -29,6 +29,11 @@ def create_speaker(payload: schemas.SpeakerIn, db: Session = Depends(get_db)):
             409,
             "सहमति पाठ अद्यावधिक भएको छ — पृष्ठ पुनः लोड गर्नुहोस्। (consent version stale)",
         )
+    if not payload.consent.commercial_use:
+        raise HTTPException(
+            400,
+            "व्यावसायिक अधिकार हस्तान्तरण सहमति आवश्यक छ। (commercial consent required)",
+        )
 
     speaker = Speaker(
         id=new_ulid(),

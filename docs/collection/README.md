@@ -47,15 +47,14 @@ filing benefit is not worth that risk today.
 
 Editing it is a deliberate act with consequences, not a documentation change.
 
-1. Have the new text reviewed — by a Nepali lawyer if the dataset will ever be
-   licensed commercially.
+1. Have the new text reviewed by a Nepali lawyer before collection.
 2. Bump `CONSENT_VERSION` in `.env`. Old records keep pointing at the old hash,
    which is the point: the change becomes visible rather than silent.
 3. Redeploy, then run `scripts/check_deployment.py` — it compares the deployed
    hash against this checkout and warns when they diverge.
 
 Contributors who consented under the old version consented to the old version.
-A version bump does not retroactively extend their permission, and commercial
-use in particular **cannot be retro-fitted**.
+A version bump does not retroactively extend their permission. Commercial
+assignment in particular **cannot be retro-fitted**.
 
 See [ADR-003](../architecture/ADR-003-consent-model.md).

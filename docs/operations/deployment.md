@@ -188,9 +188,9 @@ On R2 this needs `GET` added to the CORS policy alongside `PUT`:
 - [ ] `SECRET_KEY` set to a real value — `python -c "import secrets;print(secrets.token_hex(32))"`
 - [ ] `PUBLIC_BASE_URL` matches the HTTPS URL contributors will open
 - [ ] `STORAGE_BACKEND=s3` and CORS tested with a real upload
-- [ ] `docs/consent-ne.md` reviewed by a Nepali lawyer if you intend to license
-      the dataset commercially — the commercial-use opt-in **cannot** be
-      retro-fitted
+- [ ] `docs/consent-ne.md` reviewed by a Nepali lawyer before collection — the
+  active consent is a commercial rights assignment and **cannot** be
+  retro-fitted
 - [ ] `CONSENT_VERSION` matches the consent text actually in the repo
 - [ ] `pytest -q` passes on the deployed machine (it sandboxes itself to a
       temp database and storage directory, so it is safe to run there)

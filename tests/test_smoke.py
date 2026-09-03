@@ -36,7 +36,7 @@ def make_speaker(client, consent_version, **overrides):
         "consent": {
             "version": consent_version,
             "accepted": True,
-            "commercial_use": False,
+            "commercial_use": True,
         },
         **overrides,
     }
@@ -90,6 +90,20 @@ def test_stale_consent_version_is_refused(client):
         json={"consent": {"version": "1999-01-01-v0", "accepted": True}},
     )
     assert res.status_code == 409
+
+
+def test_commercial_assignment_consent_is_required(client, consent_version):
+    res = client.post(
+        "/api/speakers",
+        json={
+            "consent": {
+                "version": consent_version,
+                "accepted": True,
+                "commercial_use": False,
+            }
+        },
+    )
+    assert res.status_code == 400
 
 
 # --- the upload flow ----------------------------------------------------
