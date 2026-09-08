@@ -23,8 +23,15 @@ router = APIRouter()
 def create_speaker(
     payload: schemas.SpeakerIn,
     db: Session = Depends(get_db),
-    user: AuthUser | None = Depends(current_user_optional),
+    user: AuthUser = Depends(current_user),
 ):
+    """Register a speaker and record their consent.
+
+    Requires a signed-in account: recording assigns commercial rights in the
+    contributor's voice under `docs/consent-ne.md`, and that assignment must be
+    traceable to a real, authenticated account from the moment it is made --
+    not attached after the fact to whichever browser happened to record it.
+    """
     settings = get_settings()
 
     if not payload.consent.accepted:
@@ -55,7 +62,7 @@ def create_speaker(
         mother_tongue=payload.mother_tongue,
         language_variety=payload.language_variety,
         education=payload.education,
-        user_id=user.id if user else None,
+        user_id=user.id,
     )
     db.add(speaker)
     db.add(
@@ -88,10 +95,11 @@ def update_speaker(
     after the consent step, before recording started, so clips have a speaker
     to belong to from the first upload. This just completes the profile.
 
-    No auth is required while the speaker has no linked account (the normal
-    save-after-recording step may happen before anyone signs in) -- but once
-    linked, only that account may edit it. The profile page uses this same
-    endpoint for real edits, so that path has to be protected.
+    Every speaker created since account creation became mandatory already has
+    `user_id` set, so this endpoint mostly enforces "only that account may
+    edit it" in practice. A speaker with no linked account can still exist
+    from before that change; it stays open to an unauthenticated PATCH so
+    those older rows are not stranded.
     """
     speaker = db.get(Speaker, speaker_id)
     if speaker is None:
@@ -115,11 +123,11 @@ def link_speaker_to_account(
 ):
     """Attach an account to a speaker created before that account existed.
 
-    Recording never requires signing in first, so the common path is:
-    consent -> anonymous speaker created -> partway through, the contributor
-    signs in (or signs up) to make sure their work is saved. Account linking
-    at creation time alone misses exactly that case -- this is what the
-    frontend calls the moment a session becomes signed-in, so it isn't.
+    New speakers are always created signed-in and already carry `user_id`.
+    This endpoint exists for speakers created before that requirement (no
+    linked account yet) and as a safety net if a session token expired mid-flow
+    and the contributor had to sign in again -- the frontend calls this the
+    moment a session becomes signed-in, on the chance it was needed.
 
     Idempotent for the same account (calling it again is harmless); refuses
     to hand an already-linked speaker to a *different* account.

@@ -13,7 +13,9 @@ import sys
 import tempfile
 from pathlib import Path
 
+import jwt
 import pytest
+from cryptography.hazmat.primitives.asymmetric import ec
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
@@ -29,6 +31,55 @@ from app.core.db import SessionLocal, create_all  # noqa: E402
 from app.models import Prompt  # noqa: E402
 
 SANDBOX = _TMP
+
+# --- fake Supabase auth tokens ---------------------------------------------
+#
+# Recording requires a signed-in account (POST /api/speakers), and real
+# Supabase tokens are signed ES256 via a per-project key pair fetched as a
+# public JWKS (app/core/accounts.py) -- there's no shared secret to forge a
+# token with. So every test that needs "a signed-in contributor" signs with
+# this throwaway key pair instead, and the autouse fixture below stands in for
+# the JWKS endpoint so nothing here ever makes a real network call.
+
+_PRIVATE_KEY = ec.generate_private_key(ec.SECP256R1())
+_PUBLIC_KEY = _PRIVATE_KEY.public_key()
+# A second, unrelated key pair: signing with this one must fail verification
+# against the "real" public key above, exactly like a forged token would.
+_WRONG_PRIVATE_KEY = ec.generate_private_key(ec.SECP256R1())
+
+
+class _FakeSigningKey:
+    def __init__(self, key):
+        self.key = key
+
+
+class _FakeJWKClient:
+    def get_signing_key_from_jwt(self, token):
+        return _FakeSigningKey(_PUBLIC_KEY)
+
+
+@pytest.fixture(autouse=True)
+def _fake_jwks(monkeypatch):
+    """No network in tests: stand in for Supabase's public JWKS endpoint."""
+    monkeypatch.setattr("app.core.accounts._jwks_client", lambda: _FakeJWKClient())
+
+
+def auth_token(sub: str, email: str = "person@example.com", private_key=_PRIVATE_KEY) -> str:
+    """A valid (or, with `private_key=WRONG_PRIVATE_KEY`, forged) session token."""
+    return jwt.encode(
+        {"sub": sub, "email": email, "aud": "authenticated"},
+        private_key,
+        algorithm="ES256",
+    )
+
+
+def auth_headers(sub: str = "test-contributor") -> dict[str, str]:
+    """`Authorization` header for a signed-in speaker in tests that don't
+    otherwise care which account it is -- most speaker-creation calls."""
+    return {"Authorization": f"Bearer {auth_token(sub)}"}
+
+
+WRONG_PRIVATE_KEY = _WRONG_PRIVATE_KEY
 
 
 @pytest.fixture(scope="session", autouse=True)

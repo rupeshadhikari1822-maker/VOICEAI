@@ -14,6 +14,7 @@ import pytest
 from app.core.db import SessionLocal
 from app.models import Clip, Speaker
 from scripts.export_dataset import assign_splits
+from tests.conftest import auth_headers
 from tests.synth import clean_take, noisy_take
 
 # Planted deliberately so the tests can prove these values never come back out.
@@ -25,7 +26,7 @@ PII = {
 }
 
 
-def make_speaker(client, consent_version, **overrides):
+def make_speaker(client, consent_version, headers=None, **overrides):
     payload = {
         **PII,
         "province": "बागमती",
@@ -40,7 +41,10 @@ def make_speaker(client, consent_version, **overrides):
         },
         **overrides,
     }
-    res = client.post("/api/speakers", json=payload)
+    # Recording requires a signed-in account (app/api/routes/speakers.py); a
+    # fixed test account is fine here since these tests care about the
+    # recording flow, not which contributor is doing it.
+    res = client.post("/api/speakers", json=payload, headers=headers or auth_headers())
     assert res.status_code == 201, res.text
     return res.json()["speaker_id"]
 
@@ -80,6 +84,7 @@ def test_recording_without_consent_is_refused(client, consent_version):
     res = client.post(
         "/api/speakers",
         json={"consent": {"version": consent_version, "accepted": False}},
+        headers=auth_headers(),
     )
     assert res.status_code == 400
 
@@ -88,6 +93,7 @@ def test_stale_consent_version_is_refused(client):
     res = client.post(
         "/api/speakers",
         json={"consent": {"version": "1999-01-01-v0", "accepted": True}},
+        headers=auth_headers(),
     )
     assert res.status_code == 409
 
@@ -102,8 +108,47 @@ def test_commercial_assignment_consent_is_required(client, consent_version):
                 "commercial_use": False,
             }
         },
+        headers=auth_headers(),
     )
     assert res.status_code == 400
+
+
+# --- account gate ---------------------------------------------------------
+# Recording assigns commercial rights in the contributor's voice, so it must
+# be traceable to a real account from the moment it happens -- not something
+# attached after the fact to whichever browser happened to record it.
+
+
+def test_recording_without_an_account_is_refused(client, consent_version):
+    res = client.post(
+        "/api/speakers",
+        json={
+            "consent": {
+                "version": consent_version,
+                "accepted": True,
+                "commercial_use": True,
+            }
+        },
+    )
+    assert res.status_code == 401
+
+
+def test_recording_with_a_forged_token_is_refused(client, consent_version):
+    from tests.conftest import WRONG_PRIVATE_KEY, auth_token
+
+    forged = auth_token("someone", private_key=WRONG_PRIVATE_KEY)
+    res = client.post(
+        "/api/speakers",
+        json={
+            "consent": {
+                "version": consent_version,
+                "accepted": True,
+                "commercial_use": True,
+            }
+        },
+        headers={"Authorization": f"Bearer {forged}"},
+    )
+    assert res.status_code == 401
 
 
 # --- the upload flow ----------------------------------------------------
@@ -246,13 +291,15 @@ def test_pii_is_stored_but_only_in_the_speakers_table(client, consent_version):
 
 def test_update_speaker_fills_in_profile(client, consent_version):
     """Record-first flow: the speaker exists from consent alone, profile
-    details arrive afterward via PATCH."""
+    details arrive afterward via PATCH -- from the same signed-in account,
+    since recording requires one from creation onward."""
     speaker_id = make_speaker(
         client, consent_version, mother_tongue=None, province=None, age_band=None
     )
     res = client.patch(
         f"/api/speakers/{speaker_id}",
         json={"mother_tongue": "नेपाली", "province": "बागमती", "age_band": "25-34"},
+        headers=auth_headers(),
     )
     assert res.status_code == 200, res.text
     with SessionLocal() as db:
