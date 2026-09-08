@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Admin sign in — voice.cloudfrm.ai</title>
+<link rel="stylesheet" href="/static/recorder/styles.css">
+<link rel="stylesheet" href="/static/admin/styles.css">
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <span class="brand">voice<span class="accent">.cloudfrm</span>.ai</span>
+    <span class="tag">Admin dashboard</span>
+  </div>
+</header>
+
+<main class="admin-main login-main">
+
+<h1>Admin sign in</h1>
+<p class="lede">Staff only. This exchanges your email and password for the reviewer token behind it.</p>
+
+<form id="login-form">
+  <label>Email <input type="email" name="email" required autocomplete="username"></label>
+  <label>Password <input type="password" name="password" required autocomplete="current-password"></label>
+  <p class="status" id="login-status"></p>
+  <button type="submit" class="primary" id="login-submit">Sign in</button>
+</form>
+
+</main>
+
+<footer>© 2026 CloudFARM · <span class="accent">Powered by the Himalayas</span></footer>
+
+<script type="module" src="/static/admin/login.js"></script>
+</body>
+</html>

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app import schemas
@@ -29,14 +29,30 @@ def list_prompts(
         Clip.qc_status == "passed",
         Clip.tombstoned.is_(False),
     )
+
+    # How many speakers, across the whole corpus, have already successfully
+    # read each prompt. Preferring the least-covered ones spreads recordings
+    # evenly across the pool instead of leaving it to chance -- pure random
+    # selection can easily let some sentences pile up hundreds of takes while
+    # others never get picked at all.
+    served_count = (
+        select(Clip.prompt_id, func.count().label("served"))
+        .where(Clip.qc_status == "passed", Clip.tombstoned.is_(False))
+        .group_by(Clip.prompt_id)
+        .subquery()
+    )
+
     prompts = db.scalars(
         select(Prompt)
+        .outerjoin(served_count, served_count.c.prompt_id == Prompt.id)
         .where(
             Prompt.lang == session.lang,
             Prompt.active.is_(True),
             Prompt.id.not_in(already),
         )
-        .order_by(Prompt.id)
+        # Least-served first; random only breaks ties, so it never overrides
+        # coverage the way pure ORDER BY random() could.
+        .order_by(func.coalesce(served_count.c.served, 0).asc(), func.random())
         .limit(limit)
     ).all()
     return [

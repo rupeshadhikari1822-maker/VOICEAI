@@ -23,6 +23,7 @@ logger = logging.getLogger("voice")
 
 _STATIC_DIR = get_settings().base_dir / "static"
 _RECORDER_INDEX = _STATIC_DIR / "recorder" / "index.html"
+_PROFILE_INDEX = _STATIC_DIR / "profile" / "index.html"
 
 
 @asynccontextmanager
@@ -48,6 +49,13 @@ def create_app() -> FastAPI:
     @app.get("/", include_in_schema=False)
     def index() -> FileResponse:
         return FileResponse(_RECORDER_INDEX)
+
+    @app.get("/profile", include_in_schema=False)
+    def profile_page() -> FileResponse:
+        # No server-side auth gate: anyone can load the page, but every
+        # /api/me/* call it makes requires a real Supabase session, and the
+        # page itself shows a sign-in prompt when there isn't one.
+        return FileResponse(_PROFILE_INDEX)
 
     @app.exception_handler(StorageError)
     async def _storage_error_handler(_request: Request, exc: StorageError):

@@ -10,6 +10,7 @@ from functools import lru_cache
 
 from fastapi import Header, HTTPException, Query
 
+from app.core.accounts import AuthError, AuthUser, decode_supabase_jwt
 from app.core.config import get_settings
 from app.core.db import get_db  # noqa: F401  (re-exported: routes import it here)
 from app.core.security import ReviewAuthError, extract_token, reviewer_for_token
@@ -42,6 +43,32 @@ def current_reviewer(
     try:
         return reviewer_for_token(extract_token(authorization, token))
     except ReviewAuthError as exc:
+        raise HTTPException(
+            401, str(exc), headers={"WWW-Authenticate": "Bearer"}
+        ) from exc
+
+
+def current_user_optional(
+    authorization: str | None = Header(default=None),
+) -> AuthUser | None:
+    """The signed-in account, or None for an anonymous request.
+
+    Recording never requires an account; signing in only links the speaker
+    profile created afterwards to it.
+    """
+    try:
+        return decode_supabase_jwt(extract_token(authorization, None))
+    except AuthError:
+        return None
+
+
+def current_user(
+    authorization: str | None = Header(default=None),
+) -> AuthUser:
+    """The signed-in account. Raises 401 if the request has none."""
+    try:
+        return decode_supabase_jwt(extract_token(authorization, None))
+    except AuthError as exc:
         raise HTTPException(
             401, str(exc), headers={"WWW-Authenticate": "Bearer"}
         ) from exc

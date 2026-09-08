@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Admin — voice.cloudfrm.ai</title>
+<link rel="stylesheet" href="/static/recorder/styles.css">
+<link rel="stylesheet" href="/static/admin/styles.css">
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <span class="brand">voice<span class="accent">.cloudfrm</span>.ai</span>
+    <span class="tag">Admin dashboard</span>
+  </div>
+  <div class="header-right">
+    <a href="/review" class="ghost link-btn">Review queue</a>
+  </div>
+</header>
+
+<main class="admin-main">
+
+<p class="status" id="load-status"></p>
+
+<section id="dashboard" class="hidden">
+  <h1>Corpus overview</h1>
+
+  <div class="stat-grid">
+    <div class="stat-card">
+      <span class="stat-label">Speakers</span>
+      <strong class="stat-value" id="stat-speakers-total"></strong>
+      <span class="stat-sub" id="stat-speakers-sub"></span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-label">Recording sessions</span>
+      <strong class="stat-value" id="stat-sessions-total"></strong>
+    </div>
+    <div class="stat-card">
+      <span class="stat-label">Clips passed</span>
+      <strong class="stat-value ok" id="stat-clips-passed"></strong>
+      <span class="stat-sub" id="stat-clips-sub"></span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-label">Avg SNR (passed)</span>
+      <strong class="stat-value" id="stat-avg-snr"></strong>
+    </div>
+    <div class="stat-card">
+      <span class="stat-label">Active prompts</span>
+      <strong class="stat-value" id="stat-prompts-active"></strong>
+      <span class="stat-sub" id="stat-prompts-sub"></span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-label">Prompts with zero coverage</span>
+      <strong class="stat-value warn" id="stat-prompts-uncovered"></strong>
+    </div>
+    <div class="stat-card">
+      <span class="stat-label">Awaiting human review</span>
+      <strong class="stat-value warn" id="stat-review-pending"></strong>
+      <a href="/review" class="fineprint">Go to review queue →</a>
+    </div>
+    <div class="stat-card">
+      <span class="stat-label">Accounts linked</span>
+      <strong class="stat-value" id="stat-speakers-linked"></strong>
+    </div>
+  </div>
+
+  <h2>Speakers</h2>
+  <div class="table-wrap">
+    <table id="speakers-table">
+      <thead>
+        <tr>
+          <th>ID</th><th>Created</th><th>Name</th><th>Email</th><th>Phone</th>
+          <th>Province</th><th>Mother tongue</th><th>Account</th><th>Passed clips</th><th>Withdrawn</th>
+        </tr>
+      </thead>
+      <tbody id="speakers-tbody"></tbody>
+    </table>
+  </div>
+  <div class="row">
+    <button type="button" id="prev-page" disabled>← Previous</button>
+    <span class="fineprint" id="page-label"></span>
+    <button type="button" id="next-page" disabled>Next →</button>
+  </div>
+
+  <h2>Export dataset</h2>
+  <p class="fineprint">
+    Downloads a ready-to-train bundle: WAVs at the target sample rate, a
+    <code>manifest.jsonl</code>, and a dataset card. Speaker-disjoint splits;
+    no PII, ever -- names, emails, phone numbers and caste never leave the
+    database, in any format below.
+  </p>
+  <form id="export-form" class="export-form">
+    <label>Format
+      <select name="format" id="export-format">
+        <option value="asr">ASR manifest (NeMo / ESPnet / Whisper fine-tuning)</option>
+        <option value="tts">TTS (loudness-normalised + manifest)</option>
+        <option value="ljspeech">LJSpeech (Tacotron2 / VITS / Coqui TTS)</option>
+        <option value="hf">Hugging Face datasets (AudioFolder)</option>
+      </select>
+    </label>
+    <label>Sample rate (Hz)
+      <input type="number" name="sr" id="export-sr" placeholder="format default" min="8000" max="48000">
+    </label>
+    <label>Minimum SNR (dB)
+      <input type="number" name="min_snr" placeholder="none">
+    </label>
+    <label class="check export-check">
+      <input type="checkbox" name="verified_only">
+      <span>Only human-verified clips</span>
+    </label>
+    <button type="submit" class="primary" id="export-submit">Download export</button>
+  </form>
+  <p class="status" id="export-status"></p>
+</section>
+
+</main>
+
+<footer>© 2026 CloudFARM · <span class="accent">Powered by the Himalayas</span></footer>
+
+<script type="module" src="/static/admin/admin.js"></script>
+</body>
+</html>

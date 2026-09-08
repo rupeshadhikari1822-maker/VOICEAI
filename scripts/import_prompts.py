@@ -39,6 +39,16 @@ def main() -> int:
         help="mark imported prompts active (only after native-speaker review)",
     )
     parser.add_argument(
+        "--needs-review",
+        action="store_true",
+        help=(
+            "import as inactive even for a REVIEWED_LANGS language. For a batch "
+            "that was auto-generated or auto-sourced (e.g. scraped) rather than "
+            "hand-written -- 'ne' being reviewed assumes a human wrote or "
+            "checked the sentence, which a scraper does not satisfy on its own."
+        ),
+    )
+    parser.add_argument(
         "--update", action="store_true", help="overwrite text of existing prompt ids"
     )
     args = parser.parse_args()
@@ -71,7 +81,7 @@ def main() -> int:
 
             lang = args.lang or row.get("lang") or "ne"
             prompt_id = row.get("id") or f"{lang}-{lineno:05d}"
-            active = args.activate or lang in REVIEWED_LANGS
+            active = not args.needs_review and (args.activate or lang in REVIEWED_LANGS)
             if not active:
                 inactive_langs.add(lang)
 
@@ -83,6 +93,14 @@ def main() -> int:
                     existing.category = row.get("category")
                     existing.phonetic_tags = row.get("phonetic_tags")
                     existing.source = row.get("source")
+                    existing.active = active
+                    updated += 1
+                elif args.activate and not existing.active:
+                    # The documented review workflow ("re-run with --activate")
+                    # only works if this path exists -- otherwise activating a
+                    # reviewed batch silently does nothing to rows already in
+                    # the database, without a single error to notice it by.
+                    existing.active = True
                     updated += 1
                 else:
                     skipped += 1

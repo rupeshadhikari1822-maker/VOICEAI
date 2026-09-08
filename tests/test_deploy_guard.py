@@ -250,8 +250,17 @@ def test_endpoint_with_the_bucket_appended_is_refused():
     much later as a 404 on an upload -- which reads as a missing object rather
     than a wrong endpoint.
     """
-    with pytest.raises(ValueError, match="path on it"):
+    with pytest.raises(ValueError, match="ends with your bucket name"):
         Settings(**S3, s3_endpoint_url="https://a1b2c3.r2.cloudflarestorage.com/voice-corpus")
+
+
+def test_endpoint_with_a_fixed_api_path_is_accepted():
+    """Supabase Storage's S3 gateway lives at a fixed path, not a bucket name.
+
+    Only a path that IS the configured bucket is the R2 copy-paste mistake;
+    a provider's own required path prefix is not.
+    """
+    Settings(**S3, s3_endpoint_url="https://abcproject.supabase.co/storage/v1/s3")
 
 
 def test_unsubstituted_placeholder_is_refused():

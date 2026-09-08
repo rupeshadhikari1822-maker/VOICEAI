@@ -20,7 +20,11 @@ DEFAULT_SECRET_KEY = "dev-insecure-change-me"
 class Settings(BaseSettings):
     """Runtime configuration. Everything is overridable from .env."""
 
-    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+    # Absolute path: a relative one resolves against the process's cwd, which
+    # silently stops finding .env the moment uvicorn is launched from anywhere
+    # else -- every setting then falls back to its default (SQLite, local
+    # storage, zero prompts) with no error to notice it by.
+    model_config = SettingsConfigDict(env_file=str(BASE_DIR / ".env"), extra="ignore")
 
     # --- database -----------------------------------------------------
     database_url: str = f"sqlite:///{(BASE_DIR / 'voice.db').as_posix()}"
@@ -51,6 +55,18 @@ class Settings(BaseSettings):
     presign_ttl_s: int = 900
     max_clip_bytes: int = 40 * 1024 * 1024
 
+    # --- accounts (Supabase Auth) --------------------------------------
+    # Login/signup and Google sign-in happen entirely on the frontend via
+    # Supabase Auth; the API never sees a password or an OAuth token, only
+    # the JWT Supabase issues afterwards. Leaving these unset disables
+    # accounts -- recording still works fully signed out.
+    supabase_url: str | None = None
+    # Public by design: Supabase access control is Row Level Security, not
+    # keeping this key secret. Handed to the frontend via /api/config.
+    supabase_anon_key: str | None = None
+    # No shared secret to configure: token verification (app/core/accounts.py)
+    # fetches Supabase's public key set from `supabase_url` itself.
+
     # --- consent ------------------------------------------------------
     consent_version: str = "2026-09-02-commercial-v1"
     # Local development on a fork with no consent text yet. Production refuses
@@ -68,6 +84,16 @@ class Settings(BaseSettings):
     # Named staff tokens, "alice:tok1,bob:tok2". Reviewers are trusted staff,
     # not the public; this is deliberately not an identity system.
     reviewer_tokens: str = ""
+
+    # --- admin login (single hardcoded operator account) ---------------
+    # A thin email/password gate in front of the tokens above -- not a user
+    # table. POST /api/admin/login checks these, then hands back whichever
+    # token is configured under the name "admin" in REVIEWER_TOKENS. Leaving
+    # admin_email unset just disables the login endpoint; the raw token
+    # still works exactly as before. Generate a hash with
+    # scripts/set_admin_password.py -- never put a plaintext password here.
+    admin_email: str | None = None
+    admin_password_hash: str | None = None
     # Playback URLs are short-lived. The bucket stays private -- a review UI is
     # the easiest place to accidentally make a corpus public.
     presign_get_ttl_s: int = 300
@@ -105,6 +131,10 @@ class Settings(BaseSettings):
         that path, and the failure arrives much later as a 404 on an upload,
         which reads as a missing object rather than a wrong endpoint.
 
+        Only the exact bucket-appended mistake is rejected, not any path at
+        all: Supabase Storage's S3 gateway lives at a fixed
+        `/storage/v1/s3` path on the project host, which is not this mistake.
+
         Runs whenever the backend is s3, not only in production: the failure is
         identical either way.
         """
@@ -129,13 +159,14 @@ class Settings(BaseSettings):
                 )
             if not parsed.netloc:
                 problems.append(f"S3_ENDPOINT_URL has no host: {endpoint!r}.")
-            # The one that actually bites.
-            if parsed.path.strip("/"):
+            # The one that actually bites: the path IS the configured bucket
+            # name, meaning it was copy-pasted with the bucket already on it.
+            path_segments = [seg for seg in parsed.path.split("/") if seg]
+            if path_segments and path_segments[-1].lower() == self.s3_bucket.strip().lower():
                 problems.append(
-                    f"S3_ENDPOINT_URL has a path on it: {parsed.path!r}. The R2 "
-                    "console shows the bucket appended, but the app adds the "
-                    "bucket name itself. Use just the host: "
-                    f"https://{parsed.netloc}"
+                    f"S3_ENDPOINT_URL ends with your bucket name ({path_segments[-1]!r}). "
+                    "The R2 console shows the bucket appended, but the app adds "
+                    f"the bucket name itself. Use just the host: https://{parsed.netloc}"
                 )
 
         if problems:

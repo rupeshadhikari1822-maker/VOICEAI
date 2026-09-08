@@ -39,3 +39,30 @@ class SpeakerIn(BaseModel):
 class SpeakerOut(BaseModel):
     speaker_id: str
     consent_version: str
+
+
+class SpeakerUpdate(BaseModel):
+    """Fill in profile details for a speaker created earlier.
+
+    Consent is deliberately absent -- it was already recorded when the speaker
+    row was created, right after the consent step and before any recording.
+    This only ever completes a profile, never re-consents one.
+    """
+
+    model_config = ConfigDict(str_strip_whitespace=True)
+
+    name: str | None = Field(default=None, max_length=200)
+    email: str | None = Field(default=None, max_length=320)
+    phone: str | None = Field(default=None, max_length=40)
+
+    age_band: str | None = Field(default=None, max_length=20)
+    gender: str | None = Field(default=None, max_length=30)
+    province: str | None = Field(default=None, max_length=80)
+    district: str | None = Field(default=None, max_length=80)
+    municipality: str | None = Field(default=None, max_length=120)
+    ward: str | None = Field(default=None, max_length=10)
+    mother_tongue: str | None = Field(default=None, max_length=60)
+    language_variety: str | None = Field(default=None, max_length=80)
+    education: str | None = Field(default=None, max_length=60)
+
+    caste_ethnicity: str | None = Field(default=None, max_length=120)

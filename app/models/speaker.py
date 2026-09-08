@@ -42,6 +42,12 @@ class Speaker(Base):
     # --- Sensitive personal information (IPA 2075 s.27(2)). Optional. --
     caste_ethnicity: Mapped[str | None] = mapped_column(String(120))
 
+    # --- Account link (Supabase Auth uuid), set only if the contributor was
+    # signed in when this profile was created. Opaque like speaker_id; lets a
+    # signed-in contributor see their own recordings. Never exported --
+    # export_row() cannot reach it, same as name/email/phone. -------------
+    user_id: Mapped[str | None] = mapped_column(String(64), index=True)
+
     # --- Non-identifying attributes. These do get exported. ------------
     age_band: Mapped[str | None] = mapped_column(String(20))
     gender: Mapped[str | None] = mapped_column(String(30))

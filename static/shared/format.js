@@ -7,7 +7,7 @@ export function dbfs(value) {
 }
 
 export function seconds(value) {
-  if (value == null || !isFinite(value)) return '—';
+  if (value == null || !isFinite(value)) return '';
   return `${value.toFixed(1)}s`;
 }
 
@@ -19,6 +19,6 @@ export function minutes(ms) {
 }
 
 export function percent(value) {
-  if (value == null || !isFinite(value)) return '—';
+  if (value == null || !isFinite(value)) return '';
   return `${Math.round(value * 100)}%`;
 }

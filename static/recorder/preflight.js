@@ -26,6 +26,8 @@
  * rejection is a different problem with a different fix.
  */
 
+import { t } from '/static/recorder/i18n.js';
+
 export const StorageError = {
   CORS: 'STORAGE_CORS',
   AUTH: 'STORAGE_AUTH',
@@ -33,21 +35,15 @@ export const StorageError = {
   UNKNOWN: 'STORAGE_UNKNOWN',
 };
 
-// Contributor-facing copy. For CORS and AUTH the contributor cannot do
-// anything, so the message must say so plainly rather than sending them off to
-// restart their router. Blaming the reader for our misconfiguration is how you
-// lose them.
-const MESSAGES = {
-  [StorageError.CORS]:
-    'सर्भरको सेटिङमा समस्या छ — यो तपाईंको इन्टरनेटको समस्या होइन। ' +
-    'कृपया hello@cloudfrm.ai मा खबर गर्नुहोस्। अहिले रेकर्ड गर्न मिल्दैन।',
-  [StorageError.AUTH]:
-    'सर्भरको अनुमतिमा समस्या छ — यो तपाईंको गल्ती होइन। ' +
-    'कृपया hello@cloudfrm.ai मा खबर गर्नुहोस्।',
-  [StorageError.NETWORK]:
-    'इन्टरनेट जोडिएन। सम्पर्क जाँचेर फेरि प्रयास गर्नुहोस्।',
-  [StorageError.UNKNOWN]:
-    'अपलोड जाँच असफल भयो। फेरि प्रयास गर्नुहोस्, नभए hello@cloudfrm.ai मा खबर गर्नुहोस्।',
+// Contributor-facing copy (i18n.js). For CORS and AUTH the contributor cannot
+// do anything, so the message must say so plainly rather than sending them
+// off to restart their router. Blaming the reader for our misconfiguration is
+// how you lose them.
+const MESSAGE_KEYS = {
+  [StorageError.CORS]: 'preflight.cors',
+  [StorageError.AUTH]: 'preflight.auth',
+  [StorageError.NETWORK]: 'preflight.network',
+  [StorageError.UNKNOWN]: 'preflight.unknown',
 };
 
 // Operator-facing. Shown small, under the contributor message, so a screenshot
@@ -67,7 +63,7 @@ function result(codeOrNull, detail = '') {
   return {
     ok: false,
     code: codeOrNull,
-    message: MESSAGES[codeOrNull],
+    message: t(MESSAGE_KEYS[codeOrNull]),
     hint: HINTS[codeOrNull],
     detail,
   };

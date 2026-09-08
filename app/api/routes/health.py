@@ -20,6 +20,7 @@ def healthz() -> dict:
 def api_config() -> dict:
     """Everything the recorder needs to configure itself and gate takes locally."""
     thresholds = get_thresholds()
+    settings = get_settings()
     return {
         "audio": {
             "sample_rate": thresholds.target_sample_rate,
@@ -40,5 +41,9 @@ def api_config() -> dict:
             "ideal_max_duration_s": thresholds.ideal_max_duration_s,
         },
         "consent": consent_payload(),
-        "profile": get_settings().qc_profile,
+        "profile": settings.qc_profile,
+        "accounts": {
+            "supabase_url": settings.supabase_url,
+            "supabase_anon_key": settings.supabase_anon_key,
+        },
     }

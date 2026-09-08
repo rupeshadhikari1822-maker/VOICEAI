@@ -241,6 +241,32 @@ def test_pii_is_stored_but_only_in_the_speakers_table(client, consent_version):
         assert "caste_ethnicity" not in speaker.export_row()
 
 
+# --- profile completed after recording -----------------------------------
+
+
+def test_update_speaker_fills_in_profile(client, consent_version):
+    """Record-first flow: the speaker exists from consent alone, profile
+    details arrive afterward via PATCH."""
+    speaker_id = make_speaker(
+        client, consent_version, mother_tongue=None, province=None, age_band=None
+    )
+    res = client.patch(
+        f"/api/speakers/{speaker_id}",
+        json={"mother_tongue": "नेपाली", "province": "बागमती", "age_band": "25-34"},
+    )
+    assert res.status_code == 200, res.text
+    with SessionLocal() as db:
+        speaker = db.get(Speaker, speaker_id)
+        assert speaker.mother_tongue == "नेपाली"
+        assert speaker.province == "बागमती"
+        assert speaker.age_band == "25-34"
+
+
+def test_update_unknown_speaker_404s(client):
+    res = client.patch("/api/speakers/does-not-exist", json={})
+    assert res.status_code == 404
+
+
 # --- splits -------------------------------------------------------------
 
 

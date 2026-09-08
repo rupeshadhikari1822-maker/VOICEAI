@@ -22,3 +22,7 @@ class ProgressOut(BaseModel):
     passed: int
     failed: int
     remaining: int
+
+
+class DiscardOut(BaseModel):
+    discarded: int

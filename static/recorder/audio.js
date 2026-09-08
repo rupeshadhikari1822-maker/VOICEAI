@@ -272,32 +272,36 @@ export function analyze(samples, sampleRate) {
   };
 }
 
-/** Nepali-first verdict. Says what to physically change, not what failed. */
+/**
+ * Verdict as reason codes, not rendered text -- the caller (recorder.js) has
+ * the current UI language and translates each via i18n.js's t(). Says what to
+ * physically change, not what failed.
+ */
 export function gate(m, qc) {
   const reasons = [];
   if (m.empty || m.noSpeech) {
-    reasons.push('कुनै आवाज पत्ता लागेन — माइक नजिक ल्याएर फेरि बोल्नुहोस्।');
+    reasons.push({ code: 'noSpeech' });
     return { passed: false, reasons };
   }
   if (m.durationS < qc.min_duration_s) {
-    reasons.push(`रेकर्डिङ धेरै छोटो छ (${m.durationS.toFixed(1)}s) — पूरा वाक्य पढ्नुहोस्।`);
+    reasons.push({ code: 'tooShort', params: { duration: m.durationS.toFixed(1) } });
   }
   if (m.durationS > qc.max_duration_s) {
-    reasons.push(`रेकर्डिङ धेरै लामो छ (${m.durationS.toFixed(1)}s) — वाक्य सकिनेबित्तिकै रोक्नुहोस्।`);
+    reasons.push({ code: 'tooLong', params: { duration: m.durationS.toFixed(1) } });
   }
   if (m.clippingRatio > qc.max_clipping_ratio) {
-    reasons.push('आवाज बिग्रिएको छ — माइक अलि टाढा सार्नुहोस् वा बिस्तारै बोल्नुहोस्।');
+    reasons.push({ code: 'clipped' });
   }
   if (m.peakDbfs > qc.max_peak_dbfs) {
-    reasons.push('आवाज धेरै ठूलो छ — माइक मुखबाट १५–२० सेमी टाढा राख्नुहोस्।');
+    reasons.push({ code: 'tooLoud' });
   } else if (m.peakDbfs < qc.min_peak_dbfs) {
-    reasons.push('आवाज धेरै सानो छ — माइक नजिक ल्याउनुहोस् र अलि ठूलो स्वरमा बोल्नुहोस्।');
+    reasons.push({ code: 'tooQuiet' });
   }
   if (m.noiseFloorDbfs > qc.max_noise_floor_dbfs) {
-    reasons.push('पछाडिको आवाज धेरै छ — पंखा/झ्याल बन्द गर्नुहोस्।');
+    reasons.push({ code: 'noisy' });
   }
   if (m.snrDb < qc.min_snr_db) {
-    reasons.push('पछाडिको आवाज धेरै छ — पंखा/झ्याल बन्द गरेर शान्त कोठामा फेरि रेकर्ड गर्नुहोस्।');
+    reasons.push({ code: 'lowSnr' });
   }
   return { passed: reasons.length === 0, reasons };
 }

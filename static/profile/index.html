@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>My Profile — voice.cloudfrm.ai</title>
+<link rel="stylesheet" href="/static/recorder/styles.css">
+<link rel="stylesheet" href="/static/profile/styles.css">
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <a href="/" class="brand-link"><span class="brand">voice<span class="accent">.cloudfrm</span>.ai</span></a>
+    <span class="tag" data-i18n="brand.tag">Nepali voice collection</span>
+  </div>
+  <div class="header-right">
+    <select id="lang-select" class="lang-select" aria-label="Language / भाषा">
+      <option value="en">English</option>
+      <option value="ne">नेपाली</option>
+    </select>
+    <div class="authbar" id="authbar"></div>
+  </div>
+</header>
+
+<main>
+
+<!-- signed out -->
+<section id="signed-out-notice" class="hidden">
+  <h1 data-i18n="profilePage.signInHeading">Sign in to see your profile</h1>
+  <p class="lede" data-i18n="profilePage.signInLede">
+    Your profile shows the details and recordings linked to your account.
+  </p>
+</section>
+
+<!-- signed in, but no recordings linked yet -->
+<section id="empty-notice" class="hidden">
+  <h1 data-i18n="profilePage.emptyHeading">No recordings yet</h1>
+  <p class="lede" data-i18n="profilePage.emptyLede">
+    Once you record something on this account, your details and recordings will show up here.
+  </p>
+  <a href="/" class="primary link-btn" data-i18n="profilePage.startRecording">Start recording</a>
+</section>
+
+<!-- loading -->
+<p class="status" id="profile-load-status"></p>
+
+<!-- loaded profile -->
+<section id="profile-content" class="hidden">
+  <h1 data-i18n="profilePage.heading">My profile</h1>
+  <p class="fineprint"><span data-i18n="mic.idLabel">Your ID number:</span> <code id="profile-speaker-id"></code></p>
+
+  <h2 data-i18n="profilePage.detailsHeading">Personal details</h2>
+  <form id="profile-form">
+    <fieldset>
+      <legend><span data-i18n="profile.contact">Contact</span> <em data-i18n="profile.optional">(optional)</em></legend>
+      <label><span data-i18n="profile.name">Name</span> <input name="name" autocomplete="name"></label>
+      <label><span data-i18n="profile.email">Email</span> <input name="email" type="email" autocomplete="email"></label>
+      <label><span data-i18n="profile.phone">Phone</span> <input name="phone" type="tel" autocomplete="tel"></label>
+    </fieldset>
+
+    <fieldset>
+      <legend data-i18n="profile.languageGroup">Language</legend>
+      <label><span data-i18n="profile.motherTongue">Mother tongue</span>
+        <select name="mother_tongue">
+          <option value="" data-i18n="profile.choose">— choose —</option>
+          <option value="नेपाली" data-i18n="mt.nepali">Nepali</option>
+          <option value="मैथिली" data-i18n="mt.maithili">Maithili</option>
+          <option value="भोजपुरी" data-i18n="mt.bhojpuri">Bhojpuri</option>
+          <option value="थारू" data-i18n="mt.tharu">Tharu</option>
+          <option value="तामाङ" data-i18n="mt.tamang">Tamang</option>
+          <option value="नेवार" data-i18n="mt.newar">Newar</option>
+          <option value="मगर" data-i18n="mt.magar">Magar</option>
+          <option value="बज्जिका" data-i18n="mt.bajjika">Bajjika</option>
+          <option value="डोटेली" data-i18n="mt.doteli">Doteli</option>
+          <option value="अवधी" data-i18n="mt.awadhi">Awadhi</option>
+          <option value="लिम्बू" data-i18n="mt.limbu">Limbu</option>
+          <option value="अन्य" data-i18n="mt.other">Other</option>
+        </select>
+      </label>
+      <label><span data-i18n="profile.dialect">Dialect / accent</span> <input name="language_variety" data-i18n-placeholder="profile.dialectPlaceholder" placeholder="e.g.: Eastern, Doteli"></label>
+    </fieldset>
+
+    <fieldset>
+      <legend data-i18n="profile.region">Region</legend>
+      <label><span data-i18n="profile.province">Province</span>
+        <select name="province">
+          <option value="" data-i18n="profile.choose">— choose —</option>
+          <option value="कोशी" data-i18n="province.koshi">Koshi</option>
+          <option value="मधेश" data-i18n="province.madhesh">Madhesh</option>
+          <option value="बागमती" data-i18n="province.bagmati">Bagmati</option>
+          <option value="गण्डकी" data-i18n="province.gandaki">Gandaki</option>
+          <option value="लुम्बिनी" data-i18n="province.lumbini">Lumbini</option>
+          <option value="कर्णाली" data-i18n="province.karnali">Karnali</option>
+          <option value="सुदूरपश्चिम" data-i18n="province.sudurpashchim">Sudurpashchim</option>
+        </select>
+      </label>
+      <label><span data-i18n="profile.district">District</span> <input name="district"></label>
+      <label><span data-i18n="profile.municipality">Municipality</span> <input name="municipality"></label>
+      <label><span data-i18n="profile.ward">Ward</span> <input name="ward" inputmode="numeric" maxlength="2"></label>
+    </fieldset>
+
+    <fieldset>
+      <legend data-i18n="profile.otherGroup">Other</legend>
+      <label><span data-i18n="profile.ageBand">Age group</span>
+        <select name="age_band">
+          <option value="" data-i18n="profile.choose">— choose —</option>
+          <option>18-24</option><option>25-34</option><option>35-44</option>
+          <option>45-54</option><option>55-64</option><option>65+</option>
+        </select>
+      </label>
+      <label><span data-i18n="profile.gender">Gender</span>
+        <select name="gender">
+          <option value="" data-i18n="profile.choose">— choose —</option>
+          <option value="female" data-i18n="profile.genderFemale">Female</option>
+          <option value="male" data-i18n="profile.genderMale">Male</option>
+          <option value="other" data-i18n="profile.genderOther">Other</option>
+          <option value="prefer_not_to_say" data-i18n="profile.preferNotToSay">Prefer not to say</option>
+        </select>
+      </label>
+      <label><span data-i18n="profile.education">Education</span>
+        <select name="education">
+          <option value="" data-i18n="profile.choose">— choose —</option>
+          <option value="प्राथमिक" data-i18n="profile.eduPrimary">Primary</option>
+          <option value="माध्यमिक" data-i18n="profile.eduSecondary">Secondary</option>
+          <option value="स्नातक" data-i18n="profile.eduBachelor">Bachelor's</option>
+          <option value="स्नातकोत्तर वा माथि" data-i18n="profile.eduMasterPlus">Master's or above</option>
+        </select>
+      </label>
+
+      <label class="sensitive">
+        <span data-i18n="profile.casteLabel">Caste / ethnicity</span> <em data-i18n="profile.casteOptional">(optional — fine to skip)</em>
+        <input name="caste_ethnicity" data-i18n-placeholder="profile.castePlaceholder" placeholder="Leave blank if you prefer not to say">
+        <small data-i18n="profile.casteNote">
+          This is sensitive personal information (Individual Privacy Act 2075, section 27(2)).
+          It is never linked to the recording and never enters the dataset.
+        </small>
+      </label>
+    </fieldset>
+
+    <p class="status" id="profile-form-status"></p>
+    <button type="submit" class="primary" data-i18n="profilePage.saveChanges">Save changes</button>
+  </form>
+
+  <h2 data-i18n="profilePage.recordingsHeading">My recordings</h2>
+  <ul class="recordings-table" id="recordings-table"></ul>
+</section>
+
+</main>
+
+<footer>© 2026 CloudFARM · <span class="accent">Powered by the Himalayas</span></footer>
+
+<!-- sign in / sign up (auth.js expects these exact ids, same as the recorder page) -->
+<div class="modal-backdrop hidden" id="auth-modal-backdrop">
+  <div class="modal">
+    <button type="button" class="modal-close" id="auth-modal-close" data-i18n-aria-label="auth.close" aria-label="Close">×</button>
+    <div class="auth-tabs">
+      <button type="button" class="auth-tab active" data-tab="signin" data-i18n="auth.signIn">Sign in</button>
+      <button type="button" class="auth-tab" data-tab="signup" data-i18n="auth.signUpTab">Open an account</button>
+    </div>
+
+    <form id="auth-form" data-mode="signin">
+      <label><span data-i18n="profile.email">Email</span> <input type="email" name="email" required autocomplete="email"></label>
+      <label><span data-i18n="auth.password">Password</span> <input type="password" name="password" required autocomplete="current-password" minlength="6"></label>
+      <p class="status" id="auth-status"></p>
+      <button type="submit" class="primary" id="auth-submit" data-i18n="auth.signInSubmit">Sign in</button>
+    </form>
+
+    <div class="auth-divider"><span data-i18n="auth.orDivider">or</span></div>
+
+    <button type="button" id="auth-google" class="google-btn">
+      <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
+        <path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 0 1-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"/>
+        <path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z"/>
+        <path fill="#FBBC05" d="M3.964 10.706A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.706V4.962H.957A9.001 9.001 0 0 0 0 9c0 1.452.348 2.827.957 4.038l3.007-2.332z"/>
+        <path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.962L3.964 7.294C4.672 5.167 6.656 3.58 9 3.58z"/>
+      </svg>
+      <span data-i18n="auth.googleContinue">Continue with Google</span>
+    </button>
+
+    <p class="fineprint" data-i18n="auth.footnote">
+      You can record without signing in. If you sign in, your recordings are linked to your
+      account, so you can find them again later.
+    </p>
+  </div>
+</div>
+
+<script type="module" src="/static/profile/profile.js"></script>
+</body>
+</html>

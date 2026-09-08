@@ -93,7 +93,7 @@ function renderProgress() {
   $('#done-count').textContent = state.done;
   $('#reject-rate').textContent = state.done
     ? percent(state.rejected / state.done)
-    : '—';
+    : '';
   $('#queue-depth').textContent = state.queue.items.length;
 
   const elapsed = Date.now() - state.sessionStart;

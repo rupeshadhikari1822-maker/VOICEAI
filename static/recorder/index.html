@@ -1,187 +1,238 @@
 <!doctype html>
-<html lang="ne">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>आवाज रेकर्डिङ — voice.cloudfrm.ai</title>
+<title>Voice Recording — voice.cloudfrm.ai</title>
 <link rel="stylesheet" href="/static/recorder/styles.css">
 </head>
 <body>
 
 <header>
-  <span class="brand">voice<span class="accent">.cloudfrm</span>.ai</span>
-  <span class="tag">नेपाली आवाज संकलन</span>
+  <div class="header-left">
+    <span class="brand">voice<span class="accent">.cloudfrm</span>.ai</span>
+    <span class="header-divider" aria-hidden="true"></span>
+    <span class="tag" data-i18n="brand.tag">Nepali voice collection</span>
+  </div>
+  <div class="header-right">
+    <select id="lang-select" class="lang-select" aria-label="Language / भाषा">
+      <option value="en">English</option>
+      <option value="ne">नेपाली</option>
+    </select>
+    <div class="authbar" id="authbar"></div>
+  </div>
 </header>
 
 <main>
 
 <!-- 1. consent -->
 <section class="step active" data-step="consent">
-  <h1>तपाईंको आवाज, नेपाली भाषाका लागि</h1>
-  <p class="lede">
-    यो परियोजनाले नेपाली र अन्य मातृभाषाहरूको आवाज संकलन गर्छ, ताकि कम्प्युटरले
-    हाम्रो भाषा बुझ्न र बोल्न सिकोस्। तपाईंले केही वाक्य पढ्नुहुनेछ — करिब १५–२० मिनेट।
+  <h1 data-i18n="consent.heading">Your voice, for the Nepali language</h1>
+  <p class="lede" data-i18n="consent.lede">
+    This project collects voices in Nepali and other mother tongues, so computers can
+    understand and speak our language. You will read a few sentences — about 15–20 minutes.
   </p>
 
   <div class="spec-row">
-    <div><span>गुणस्तर</span><strong id="spec-sr">48 kHz</strong></div>
-    <div><span>चाहिने SNR</span><strong id="spec-snr">30 dB</strong></div>
-    <div><span>समय</span><strong>१५–२० मिनेट</strong></div>
+    <div><span data-i18n="consent.specQuality">Quality</span><strong id="spec-sr">48 kHz</strong></div>
+    <div><span data-i18n="consent.specSnr">SNR needed</span><strong id="spec-snr">30 dB</strong></div>
+    <div><span data-i18n="consent.specTime">Time</span><strong data-i18n="consent.specTimeValue">15–20 minutes</strong></div>
   </div>
 
-  <h2>सहमति</h2>
-  <div class="consent-box" id="consent-text">लोड हुँदैछ…</div>
-  <p class="fineprint">सहमति संस्करण: <code id="consent-version">—</code></p>
+  <h2 data-i18n="consent.heading2">Consent</h2>
+  <div class="consent-box" id="consent-text" data-i18n="consent.loading">Loading…</div>
+  <p class="fineprint"><span data-i18n="consent.versionLabel">Consent version:</span> <code id="consent-version"></code></p>
 
   <label class="check">
     <input type="checkbox" id="consent-agree">
-    <span>मैले माथिको सहमति पढेँ र बुझेँ। म स्वेच्छाले सहभागी हुन सहमत छु।</span>
+    <span data-i18n="consent.agree">I have read and understood the consent above. I agree to participate voluntarily.</span>
   </label>
 
   <p class="status" id="consent-status"></p>
-  <button id="to-profile" class="primary" disabled>अगाडि बढ्नुहोस्</button>
+  <button id="consent-continue" class="primary" disabled data-i18n="consent.continue">Continue</button>
 </section>
 
-<!-- 2. profile -->
-<section class="step" data-step="profile">
-  <h1>तपाईंको बारेमा</h1>
-  <p class="lede">
-    यी विवरण भाषिक विविधता मापन गर्न मात्र प्रयोग हुन्छन्। तपाईंको नाम, इमेल र फोन
-    कहिल्यै रेकर्डिङसँग जोडिँदैन, र डेटासेटमा जाँदैन।
+<!-- storage preflight failure -->
+<section class="step" data-step="blocked">
+  <h1 data-i18n="blocked.heading">Cannot record right now</h1>
+  <p class="lede" id="blocked-message"></p>
+
+  <p class="fineprint" data-i18n="blocked.footnote">
+    You did nothing wrong. This check runs before recording starts, so your time isn’t wasted.
   </p>
 
-  <form id="profile-form">
-    <fieldset>
-      <legend>सम्पर्क <em>(वैकल्पिक)</em></legend>
-      <label>नाम <input name="name" autocomplete="name"></label>
-      <label>इमेल <input name="email" type="email" autocomplete="email"></label>
-      <label>फोन <input name="phone" type="tel" autocomplete="tel"></label>
-    </fieldset>
+  <button id="blocked-retry" class="primary" hidden data-i18n="blocked.retry">Try again</button>
 
-    <fieldset>
-      <legend>भाषा</legend>
-      <label>रेकर्ड गर्ने भाषा
-        <select name="lang">
-          <option value="ne" selected>नेपाली</option>
-        </select>
-      </label>
-      <label>मातृभाषा
-        <select name="mother_tongue">
-          <option value="">— छान्नुहोस् —</option>
-          <option>नेपाली</option><option>मैथिली</option><option>भोजपुरी</option>
-          <option>थारू</option><option>तामाङ</option><option>नेवार</option>
-          <option>मगर</option><option>बज्जिका</option><option>डोटेली</option>
-          <option>अवधी</option><option>लिम्बू</option><option>अन्य</option>
-        </select>
-      </label>
-      <label>भाषिका / लवज <input name="language_variety" placeholder="जस्तै: पूर्वी, डोट्याली"></label>
-    </fieldset>
-
-    <fieldset>
-      <legend>क्षेत्र</legend>
-      <p class="fineprint">
-        पूरा ठेगाना सोधिँदैन। प्रदेश–जिल्ला–पालिकाले भाषिका छुट्याउन पुग्छ।
-      </p>
-      <label>प्रदेश
-        <select name="province">
-          <option value="">— छान्नुहोस् —</option>
-          <option>कोशी</option><option>मधेश</option><option>बागमती</option>
-          <option>गण्डकी</option><option>लुम्बिनी</option><option>कर्णाली</option>
-          <option>सुदूरपश्चिम</option>
-        </select>
-      </label>
-      <label>जिल्ला <input name="district"></label>
-      <label>नगरपालिका / गाउँपालिका <input name="municipality"></label>
-      <label>वडा <input name="ward" inputmode="numeric" maxlength="2"></label>
-    </fieldset>
-
-    <fieldset>
-      <legend>अन्य</legend>
-      <label>उमेर समूह
-        <select name="age_band">
-          <option value="">— छान्नुहोस् —</option>
-          <option>18-24</option><option>25-34</option><option>35-44</option>
-          <option>45-54</option><option>55-64</option><option>65+</option>
-        </select>
-      </label>
-      <label>लिङ्ग
-        <select name="gender">
-          <option value="">— छान्नुहोस् —</option>
-          <option value="female">महिला</option>
-          <option value="male">पुरुष</option>
-          <option value="other">अन्य</option>
-          <option value="prefer_not_to_say">भन्न चाहन्न</option>
-        </select>
-      </label>
-      <label>शिक्षा
-        <select name="education">
-          <option value="">— छान्नुहोस् —</option>
-          <option>प्राथमिक</option><option>माध्यमिक</option>
-          <option>स्नातक</option><option>स्नातकोत्तर वा माथि</option>
-        </select>
-      </label>
-
-      <label class="sensitive">
-        जात / जातीयता <em>(वैकल्पिक — नभने पनि हुन्छ)</em>
-        <input name="caste_ethnicity" placeholder="भन्न चाहनुहुन्न भने खाली छोड्नुहोस्">
-        <small>
-          यो संवेदनशील व्यक्तिगत सूचना हो (व्यक्तिगत गोपनीयता ऐन २०७५, दफा २७(२))।
-          यो रेकर्डिङसँग जोडिँदैन र डेटासेटमा कहिल्यै जाँदैन।
-        </small>
-      </label>
-    </fieldset>
-
-    <p class="status" id="profile-status"></p>
-    <button type="submit" class="primary" id="profile-submit">माइक जाँच्नुहोस्</button>
-  </form>
+  <p class="fineprint">
+    <code id="blocked-code"></code><br>
+    <span id="blocked-hint" class="hint-detail"></span>
+  </p>
 </section>
 
-<!-- 3. mic check -->
+<!-- 2. mic check -->
 <section class="step" data-step="miccheck">
-  <h1>माइक जाँच</h1>
-  <p class="fineprint">तपाईंको पहिचान नम्बर: <code id="speaker-id">—</code></p>
+  <div class="mic-hero">
+    <div class="mic-avatar" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+        <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+        <line x1="12" y1="19" x2="12" y2="23"/>
+        <line x1="8" y1="23" x2="16" y2="23"/>
+      </svg>
+    </div>
+    <h1 data-i18n="mic.heading">Microphone check</h1>
+    <p class="lede" data-i18n="mic.lede">Let's make sure everything sounds right.</p>
+    <div class="id-chip">
+      <span data-i18n="mic.idLabel">Your ID number:</span>
+      <code id="speaker-id"></code>
+      <button type="button" id="copy-speaker-id" class="icon-btn" aria-label="Copy ID" data-i18n-aria-label="mic.copyId">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      </button>
+    </div>
+  </div>
 
-  <ol class="rules">
-    <li>सानो, नरम कोठा रोज्नुहोस् — ओछ्यान र पर्दा भएको कोठा ठूलो खाली हल भन्दा राम्रो।</li>
-    <li>झ्याल–ढोका बन्द गर्नुहोस्। पंखा, AC, कुलर र TV निभाउनुहोस्।</li>
-    <li>फोन <strong>साइलेन्ट</strong> गर्नुहोस् — भाइब्रेट होइन।</li>
-    <li>माइक मुखबाट १५–२० सेमी टाढा, अलि छेउतिर राख्नुहोस्।</li>
-    <li>तार भएको हेडसेट प्रयोग गर्नुहोस्। <strong>ब्लुटुथ नचलाउनुहोस्।</strong></li>
-    <li>स्वाभाविक गतिमा बोल्नुहोस् — समाचार वाचक जसरी नपढ्नुहोस्।</li>
-  </ol>
+  <div class="rules-card">
+    <ol class="rules">
+      <li><span class="rule-badge">1</span><span data-i18n="mic.rule1">Choose a small, soft room — a room with a bed and curtains is better than a big empty hall.</span></li>
+      <li><span class="rule-badge">2</span><span data-i18n="mic.rule2">Close doors and windows. Turn off fans, AC, coolers and TV.</span></li>
+      <li><span class="rule-badge">3</span><span><span data-i18n="mic.rule3a">Put your phone on</span> <strong data-i18n="mic.rule3strong">silent</strong> <span data-i18n="mic.rule3b">— not vibrate.</span></span></li>
+      <li><span class="rule-badge">4</span><span data-i18n="mic.rule4">Keep the mic 15–20 cm from your mouth, slightly to the side.</span></li>
+      <li><span class="rule-badge">5</span><span><span data-i18n="mic.rule5a">Use a wired headset.</span> <strong data-i18n="mic.rule5strong">Do not use Bluetooth.</strong></span></li>
+      <li><span class="rule-badge">6</span><span data-i18n="mic.rule6">Speak at a natural pace — don’t read like a news anchor.</span></li>
+    </ol>
+  </div>
 
-  <div class="meter"><div class="meter-fill" id="meter-fill"></div></div>
-  <p class="meter-label" id="meter-label">— dBFS</p>
+  <div class="meter-shell">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/></svg>
+    <div class="waveform" id="mic-waveform"></div>
+  </div>
+  <p class="meter-label" id="meter-label"></p>
+  <div class="test-progress hidden" id="mic-test-progress"><div class="test-progress-fill" id="mic-test-progress-fill"></div></div>
 
-  <div class="spec-row">
-    <div><span>माइक</span><strong id="mic-name">—</strong></div>
-    <div><span>दर</span><strong id="mic-rate">—</strong></div>
-    <div><span>कोठाको आवाज</span><strong id="room-floor">—</strong></div>
+  <div class="stat-row">
+    <div class="stat-pill">
+      <div class="stat-pill-label">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/></svg>
+        <span data-i18n="mic.micLabel">Mic</span>
+      </div>
+      <strong id="mic-name"></strong>
+    </div>
+    <div class="stat-pill">
+      <div class="stat-pill-label">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="20" x2="6" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="18" y1="20" x2="18" y2="14"/></svg>
+        <span data-i18n="mic.rateLabel">Rate</span>
+      </div>
+      <strong id="mic-rate"></strong>
+    </div>
+    <div class="stat-pill">
+      <div class="stat-pill-label">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+        <span data-i18n="mic.roomFloorLabel">Room noise</span>
+      </div>
+      <strong id="room-floor"></strong>
+    </div>
   </div>
 
   <ul class="problems" id="mic-problems"></ul>
   <p class="status" id="mic-status"></p>
 
-  <div class="row">
-    <button id="mic-start" class="primary">माइक खोल्नुहोस्</button>
-    <button id="mic-quiet" disabled>५ सेकेन्ड चुप जाँच</button>
-    <button id="to-record" class="primary" disabled>रेकर्डिङ सुरु</button>
-  </div>
+  <button id="mic-begin" class="primary big">
+    <span data-i18n="mic.begin">Start recording</span>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+  </button>
 </section>
 
-<!-- 4. record -->
-<section class="step" data-step="record">
-  <div class="record-head">
-    <span id="prompt-counter">— / —</span>
-    <span>पठाइएको: <strong id="pass-count">0</strong></span>
+<!-- 2b. choose recording method (after the mic/silence check passes, before recording starts) -->
+<section class="step" data-step="method">
+  <div class="method-eyebrow"><span></span><span data-i18n="method.eyebrow">Next step</span><span></span></div>
+  <h1 class="method-heading">
+    <span data-i18n="method.headingPre">Choose Your</span>
+    <span class="accent" data-i18n="method.headingAccent">Recording Method</span>
+  </h1>
+  <p class="lede method-lede" data-i18n="method.lede">Select how you'd like to contribute your voice.</p>
+
+  <div class="method-grid">
+    <div class="method-card">
+      <div class="method-badge">01</div>
+      <div class="method-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+          <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+          <line x1="12" y1="19" x2="12" y2="23"/>
+          <line x1="8" y1="23" x2="16" y2="23"/>
+        </svg>
+      </div>
+      <h2 class="method-title" data-i18n="method.guidedTitle">Guided Recording</h2>
+      <p class="method-sub accent" data-i18n="method.guidedSub">Record with guidance</p>
+      <p class="method-desc" data-i18n="method.guidedDesc">You'll be provided with a set of sentences to read aloud, one at a time.</p>
+      <button type="button" id="method-guided" class="primary method-cta">
+        <span data-i18n="method.guidedCta">Start guided recording</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+      </button>
+    </div>
+
+    <div class="method-card">
+      <div class="method-badge">02</div>
+      <div class="method-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <line x1="4" y1="10" x2="4" y2="14"/><line x1="8" y1="6" x2="8" y2="18"/>
+          <line x1="12" y1="4" x2="12" y2="20"/><line x1="16" y1="6" x2="16" y2="18"/>
+          <line x1="20" y1="10" x2="20" y2="14"/>
+        </svg>
+        <div class="method-icon-badge">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v10m0-10-3.5 3.5M12 3l3.5 3.5"/><path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
+        </div>
+      </div>
+      <h2 class="method-title" data-i18n="method.freeTitle">Free Recording</h2>
+      <p class="method-sub accent" data-i18n="method.freeSub">Record your own voice</p>
+      <p class="method-desc" data-i18n="method.freeDesc">Submit up to 8 hours of your own voice recordings. Upload the corresponding transcript and script with your recordings.</p>
+      <button type="button" id="method-free" class="primary method-cta" disabled>
+        <span data-i18n="method.freeCta">Upload recording</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+      </button>
+    </div>
   </div>
 
-  <div class="prompt" id="prompt-text">—</div>
+  <p class="status" id="method-status"></p>
+  <p class="fineprint method-footnote">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+    <span data-i18n="method.footnote">You can choose either recording method.</span>
+  </p>
+</section>
 
-  <div class="meter"><div class="meter-fill" id="meter-fill-2"></div></div>
+<!-- 3. record -->
+<section class="step" data-step="record">
+  <div class="record-head">
+    <span id="prompt-counter"></span>
+    <span><span data-i18n="record.sentLabel">Sent:</span> <strong id="pass-count">0</strong></span>
+  </div>
+  <p class="fineprint save-note" data-i18n="record.autoSaveNote">
+    Your progress saves automatically after every sentence you send — you can stop anytime and finish the rest later on this device.
+  </p>
+  <div class="row save-later-btn">
+    <button id="save-later" type="button" class="ghost" data-i18n="record.saveLater">Save and continue later</button>
+    <button id="discard-session" type="button" class="ghost danger" data-i18n="record.discard">Discard session</button>
+  </div>
+
+  <div class="prompt" id="prompt-text"></div>
+
+  <div class="waveform" id="record-waveform"></div>
   <p class="timer" id="timer">0.0s</p>
 
-  <button id="record-toggle" class="record">रेकर्ड गर्नुहोस्</button>
+  <div class="tech-box" id="tech-box">
+    <div class="tech-box-head" data-i18n="record.techHeading">Technical details</div>
+    <div class="tech-grid">
+      <div><span data-i18n="tech.sampleRate">Sample rate</span><strong id="tech-rate"></strong></div>
+      <div><span data-i18n="tech.bitDepth">Bit depth</span><strong data-i18n="tech.bitDepthValue">16-bit</strong></div>
+      <div><span data-i18n="tech.channels">Channels</span><strong data-i18n="tech.mono">Mono</strong></div>
+      <div><span data-i18n="tech.format">Format</span><strong data-i18n="tech.pcmWav">WAV (PCM)</strong></div>
+      <div><span data-i18n="tech.compression">Compression</span><strong data-i18n="tech.none">Uncompressed</strong></div>
+      <div><span data-i18n="tech.liveLevel">Live level</span><strong id="tech-live-level"></strong></div>
+      <div><span data-i18n="tech.fileSize">Est. size</span><strong id="tech-live-size"></strong></div>
+    </div>
+  </div>
+
+  <button id="record-toggle" class="record" data-i18n="record.start">Record</button>
 
   <div class="metrics" id="metrics"></div>
   <p class="status" id="record-status"></p>
@@ -191,49 +242,182 @@
   </div>
 
   <div class="row">
-    <button id="retake" disabled>फेरि रेकर्ड</button>
-    <button id="accept" class="primary" disabled>पठाउनुहोस्</button>
+    <button id="retake" disabled data-i18n="record.retake">Retake</button>
+    <button id="accept" class="primary" disabled data-i18n="record.accept">Send</button>
+    <button id="next" class="primary hidden" data-i18n="record.next">Next sentence</button>
   </div>
 
-  <p class="fineprint">
-    बोल्नु अघि र सकेपछि आधा सेकेन्ड पर्खनुहोस्। हरेक वाक्य ४–१० सेकेन्डको हुनुपर्छ।
+  <p class="fineprint" data-i18n="record.footnote">
+    Wait half a second before and after speaking. Each sentence should be 4–10 seconds.
   </p>
 </section>
 
-<!-- storage preflight failure -->
-<section class="step" data-step="blocked">
-  <h1>अहिले रेकर्ड गर्न मिल्दैन</h1>
-  <p class="lede" id="blocked-message">—</p>
+<!-- paused: left mid-session on purpose, resumable on this device -->
+<section class="step" data-step="paused">
+  <h1 data-i18n="paused.heading">Saved — come back anytime</h1>
+  <p class="lede">
+    <span data-i18n="paused.summaryPre">You've recorded</span> <strong id="paused-count">0</strong>
+    <span data-i18n="paused.summaryMid">of</span> <strong id="paused-total">50</strong>
+    <span data-i18n="paused.summaryPost">sentences so far. Nothing is lost — come back to this page on this device to finish the rest.</span>
+  </p>
+  <p class="fineprint"><span data-i18n="mic.idLabel">Your ID number:</span> <code id="paused-speaker"></code></p>
+  <button id="paused-continue" class="primary" data-i18n="paused.continueNow">Continue now</button>
+</section>
 
-  <p class="fineprint">
-    तपाईंले केही गलत गर्नुभएको होइन। यो जाँच रेकर्डिङ सुरु गर्नुअघि नै गरिन्छ,
-    ताकि तपाईंको समय खेर नजाओस्।
+<!-- 4. save profile (after recording) -->
+<section class="step" data-step="save">
+  <h1 data-i18n="save.heading">Almost done — tell us about yourself</h1>
+  <p class="lede" data-i18n="save.lede">
+    You’ve finished recording. These optional details help measure linguistic diversity in
+    the dataset. Your name, email and phone are never linked to the recording, and never go
+    into the dataset.
   </p>
 
-  <button id="blocked-retry" class="primary" hidden>फेरि प्रयास गर्नुहोस्</button>
+  <form id="save-form">
+    <fieldset>
+      <legend><span data-i18n="profile.contact">Contact</span> <em data-i18n="profile.optional">(optional)</em></legend>
+      <label><span data-i18n="profile.name">Name</span> <input name="name" autocomplete="name"></label>
+      <label><span data-i18n="profile.email">Email</span> <input name="email" type="email" autocomplete="email"></label>
+      <label><span data-i18n="profile.phone">Phone</span> <input name="phone" type="tel" autocomplete="tel"></label>
+    </fieldset>
 
-  <p class="fineprint">
-    <code id="blocked-code">—</code><br>
-    <span id="blocked-hint" class="hint-detail">—</span>
-  </p>
+    <fieldset>
+      <legend data-i18n="profile.languageGroup">Language</legend>
+      <label><span data-i18n="profile.motherTongue">Mother tongue</span>
+        <select name="mother_tongue">
+          <option value="" data-i18n="profile.choose">— choose —</option>
+          <option value="नेपाली" data-i18n="mt.nepali">Nepali</option>
+          <option value="मैथिली" data-i18n="mt.maithili">Maithili</option>
+          <option value="भोजपुरी" data-i18n="mt.bhojpuri">Bhojpuri</option>
+          <option value="थारू" data-i18n="mt.tharu">Tharu</option>
+          <option value="तामाङ" data-i18n="mt.tamang">Tamang</option>
+          <option value="नेवार" data-i18n="mt.newar">Newar</option>
+          <option value="मगर" data-i18n="mt.magar">Magar</option>
+          <option value="बज्जिका" data-i18n="mt.bajjika">Bajjika</option>
+          <option value="डोटेली" data-i18n="mt.doteli">Doteli</option>
+          <option value="अवधी" data-i18n="mt.awadhi">Awadhi</option>
+          <option value="लिम्बू" data-i18n="mt.limbu">Limbu</option>
+          <option value="अन्य" data-i18n="mt.other">Other</option>
+        </select>
+      </label>
+      <label><span data-i18n="profile.dialect">Dialect / accent</span> <input name="language_variety" data-i18n-placeholder="profile.dialectPlaceholder" placeholder="e.g.: Eastern, Doteli"></label>
+    </fieldset>
+
+    <fieldset>
+      <legend data-i18n="profile.region">Region</legend>
+      <p class="fineprint" data-i18n="profile.regionNote">
+        Full address is not asked. Province–district–municipality is enough to distinguish dialect.
+      </p>
+      <label><span data-i18n="profile.province">Province</span>
+        <select name="province">
+          <option value="" data-i18n="profile.choose">— choose —</option>
+          <option value="कोशी" data-i18n="province.koshi">Koshi</option>
+          <option value="मधेश" data-i18n="province.madhesh">Madhesh</option>
+          <option value="बागमती" data-i18n="province.bagmati">Bagmati</option>
+          <option value="गण्डकी" data-i18n="province.gandaki">Gandaki</option>
+          <option value="लुम्बिनी" data-i18n="province.lumbini">Lumbini</option>
+          <option value="कर्णाली" data-i18n="province.karnali">Karnali</option>
+          <option value="सुदूरपश्चिम" data-i18n="province.sudurpashchim">Sudurpashchim</option>
+        </select>
+      </label>
+      <label><span data-i18n="profile.district">District</span> <input name="district"></label>
+      <label><span data-i18n="profile.municipality">Municipality</span> <input name="municipality"></label>
+      <label><span data-i18n="profile.ward">Ward</span> <input name="ward" inputmode="numeric" maxlength="2"></label>
+    </fieldset>
+
+    <fieldset>
+      <legend data-i18n="profile.otherGroup">Other</legend>
+      <label><span data-i18n="profile.ageBand">Age group</span>
+        <select name="age_band">
+          <option value="" data-i18n="profile.choose">— choose —</option>
+          <option>18-24</option><option>25-34</option><option>35-44</option>
+          <option>45-54</option><option>55-64</option><option>65+</option>
+        </select>
+      </label>
+      <label><span data-i18n="profile.gender">Gender</span>
+        <select name="gender">
+          <option value="" data-i18n="profile.choose">— choose —</option>
+          <option value="female" data-i18n="profile.genderFemale">Female</option>
+          <option value="male" data-i18n="profile.genderMale">Male</option>
+          <option value="other" data-i18n="profile.genderOther">Other</option>
+          <option value="prefer_not_to_say" data-i18n="profile.preferNotToSay">Prefer not to say</option>
+        </select>
+      </label>
+      <label><span data-i18n="profile.education">Education</span>
+        <select name="education">
+          <option value="" data-i18n="profile.choose">— choose —</option>
+          <option value="प्राथमिक" data-i18n="profile.eduPrimary">Primary</option>
+          <option value="माध्यमिक" data-i18n="profile.eduSecondary">Secondary</option>
+          <option value="स्नातक" data-i18n="profile.eduBachelor">Bachelor's</option>
+          <option value="स्नातकोत्तर वा माथि" data-i18n="profile.eduMasterPlus">Master's or above</option>
+        </select>
+      </label>
+
+      <label class="sensitive">
+        <span data-i18n="profile.casteLabel">Caste / ethnicity</span> <em data-i18n="profile.casteOptional">(optional — fine to skip)</em>
+        <input name="caste_ethnicity" data-i18n-placeholder="profile.castePlaceholder" placeholder="Leave blank if you prefer not to say">
+        <small data-i18n="profile.casteNote">
+          This is sensitive personal information (Individual Privacy Act 2075, section 27(2)).
+          It is never linked to the recording and never enters the dataset.
+        </small>
+      </label>
+    </fieldset>
+
+    <p class="status" id="save-status"></p>
+    <button type="submit" class="primary" id="save-submit" data-i18n="save.submit">Save and finish</button>
+  </form>
 </section>
 
 <!-- 5. done -->
 <section class="step" data-step="done">
-  <h1>धन्यवाद 🙏</h1>
+  <h1 data-i18n="done.heading">Thank you 🙏</h1>
   <p class="lede">
-    तपाईंले <strong id="done-count">0</strong> वाक्य रेकर्ड गर्नुभयो। यो आवाज नेपाली
-    भाषाका लागि प्रयोग हुनेछ।
+    <span data-i18n="done.summaryPre">You recorded</span> <strong id="done-count">0</strong> <span data-i18n="done.summaryPost">sentences. This voice will be used for the Nepali language.</span>
   </p>
   <p class="fineprint">
-    तपाईंको पहिचान नम्बर: <code id="done-speaker">—</code><br>
-    डेटा हटाउन चाहनुभयो भने यही नम्बर सहित सम्पर्क गर्नुहोस्।
+    <span data-i18n="done.idLabel">Your ID number:</span> <code id="done-speaker"></code><br>
+    <span data-i18n="done.withdrawNote">If you want your data removed, contact us with this number.</span>
   </p>
 </section>
 
 </main>
 
 <footer>© 2026 CloudFARM · <span class="accent">Powered by the Himalayas</span></footer>
+
+<!-- sign in / sign up -->
+<div class="modal-backdrop hidden" id="auth-modal-backdrop">
+  <div class="modal">
+    <button type="button" class="modal-close" id="auth-modal-close" data-i18n-aria-label="auth.close" aria-label="Close">×</button>
+    <div class="auth-tabs">
+      <button type="button" class="auth-tab active" data-tab="signin" data-i18n="auth.signIn">Sign in</button>
+      <button type="button" class="auth-tab" data-tab="signup" data-i18n="auth.signUpTab">Open an account</button>
+    </div>
+
+    <form id="auth-form" data-mode="signin">
+      <label><span data-i18n="profile.email">Email</span> <input type="email" name="email" required autocomplete="email"></label>
+      <label><span data-i18n="auth.password">Password</span> <input type="password" name="password" required autocomplete="current-password" minlength="6"></label>
+      <p class="status" id="auth-status"></p>
+      <button type="submit" class="primary" id="auth-submit" data-i18n="auth.signInSubmit">Sign in</button>
+    </form>
+
+    <div class="auth-divider"><span data-i18n="auth.orDivider">or</span></div>
+
+    <button type="button" id="auth-google" class="google-btn">
+      <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
+        <path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 0 1-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"/>
+        <path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z"/>
+        <path fill="#FBBC05" d="M3.964 10.706A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.706V4.962H.957A9.001 9.001 0 0 0 0 9c0 1.452.348 2.827.957 4.038l3.007-2.332z"/>
+        <path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.962L3.964 7.294C4.672 5.167 6.656 3.58 9 3.58z"/>
+      </svg>
+      <span data-i18n="auth.googleContinue">Continue with Google</span>
+    </button>
+
+    <p class="fineprint" data-i18n="auth.footnote">
+      You can record without signing in. If you sign in, your recordings are linked to your
+      account, so you can find them again later.
+    </p>
+  </div>
+</div>
 
 <script type="module" src="/static/recorder/recorder.js"></script>
 </body>

@@ -2,6 +2,7 @@
 *.py[cod]
 .DS_Store
 .env
+.env.vercel
 .pytest_cache/
 .ruff_cache/
 .venv/

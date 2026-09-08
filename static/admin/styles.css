@@ -1,0 +1,48 @@
+.admin-main { max-width: 72rem; }
+.login-main { max-width: 24rem; margin-top: 3rem; }
+
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  gap: 0.75rem;
+  margin: 1.25rem 0 2rem;
+}
+.stat-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0.9rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+.stat-label { color: var(--muted); font-size: 0.78rem; }
+.stat-value { font-size: 1.6rem; font-variant-numeric: tabular-nums; }
+.stat-value.ok { color: var(--ok); }
+.stat-value.warn { color: var(--warn); }
+.stat-sub { color: var(--muted); font-size: 0.75rem; }
+
+.table-wrap { overflow-x: auto; margin: 1rem 0; }
+table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+th, td {
+  text-align: left;
+  padding: 0.5rem 0.7rem;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+th { color: var(--muted); font-weight: 600; font-size: 0.78rem; }
+
+/* --- export dataset form --- */
+.export-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  gap: 0.9rem;
+  align-items: end;
+  margin: 1rem 0;
+}
+.export-form label { margin-bottom: 0; }
+.export-check {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.3rem;
+}

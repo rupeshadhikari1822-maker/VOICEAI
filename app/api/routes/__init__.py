@@ -9,9 +9,11 @@ from __future__ import annotations
 from fastapi import APIRouter
 
 from app.api.routes import (
+    admin,
     clips,
     consent,
     health,
+    me,
     prompts,
     review,
     sessions,
@@ -23,11 +25,13 @@ api_router = APIRouter()
 
 api_router.include_router(health.router, tags=["health"])
 api_router.include_router(speakers.router, tags=["speakers"])
+api_router.include_router(me.router, tags=["me"])
 api_router.include_router(sessions.router, tags=["sessions"])
 api_router.include_router(prompts.router, tags=["prompts"])
 api_router.include_router(clips.router, tags=["clips"])
 api_router.include_router(consent.router, tags=["consent"])
 api_router.include_router(review.router, tags=["review"])
 api_router.include_router(storage.router, tags=["storage"])
+api_router.include_router(admin.router, tags=["admin"])
 
 __all__ = ["api_router"]
