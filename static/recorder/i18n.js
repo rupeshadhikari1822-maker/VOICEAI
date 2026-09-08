@@ -34,6 +34,10 @@ export const STRINGS = {
     ne: 'मैले माथिको सहमति पढेँ र बुझेँ। म स्वेच्छाले सहभागी हुन सहमत छु।',
   },
   'consent.continue': { en: 'Continue', ne: 'अगाडि बढ्नुहोस्' },
+  'consent.accountNote': {
+    en: "You'll be asked to sign in or open a free account next — recording requires one.",
+    ne: 'अब साइन इन गर्न वा नि:शुल्क खाता खोल्न भनिनेछ — रेकर्ड गर्न खाता आवश्यक छ।',
+  },
 
   // --- choose recording method step ------------------------------------------
   'method.eyebrow': { en: 'Next step', ne: 'अर्को चरण' },
@@ -305,6 +309,10 @@ export const STRINGS = {
   // --- status / error messages --------------------------------------------------
   'status.sending': { en: 'Sending…', ne: 'पठाइँदै…' },
   'status.settingUp': { en: 'Setting up…', ne: 'सेटअप हुँदै…' },
+  'status.signInRequired': {
+    en: 'Sign in or create a free account to continue.',
+    ne: 'जारी राख्न साइन इन गर्नुहोस् वा नि:शुल्क खाता खोल्नुहोस्।',
+  },
   'status.uploadChecking': { en: 'Checking upload…', ne: 'अपलोड जाँच गर्दै…' },
   'status.openingMic': { en: 'Opening microphone…', ne: 'माइक खोल्दै…' },
   'status.roomTooLoud': {
@@ -373,8 +381,8 @@ export const STRINGS = {
   'auth.googleContinue': { en: 'Continue with Google', ne: 'Google बाट जारी राख्नुहोस्' },
   'auth.orDivider': { en: 'or', ne: 'वा' },
   'auth.footnote': {
-    en: 'You can record without signing in. If you sign in, your recordings are linked to your account, so you can find them again later.',
-    ne: 'साइन इन नगरी पनि रेकर्ड गर्न सकिन्छ। साइन इन गर्नुभयो भने तपाईंको रेकर्डिङहरू तपाईंको खातासँग जोडिन्छन्, ताकि पछि पनि हेर्न सकिन्छ।',
+    en: 'An account is required to record, so your recordings stay linked to you and you can find them again later.',
+    ne: 'रेकर्ड गर्न खाता आवश्यक छ, ताकि तपाईंको रेकर्डिङहरू तपाईंसँग जोडिएर रहन्छन् र पछि पनि भेट्टाउन सकिन्छ।',
   },
   'auth.close': { en: 'Close', ne: 'बन्द गर्नुहोस्' },
 

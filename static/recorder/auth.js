@@ -1,9 +1,12 @@
 /**
  * Accounts: sign in / sign up / Google, backed by Supabase Auth.
  *
- * Recording never requires this -- `initAuth` is a no-op if the server has no
- * Supabase project configured (GET /api/config returns null keys), and every
- * other module keeps working with getAccessToken() simply returning null.
+ * The recorder flow (recorder.js) requires a signed-in session before it will
+ * register a speaker, so `openAuthModal` doubles as that gate. `initAuth` is
+ * still a no-op if the server has no Supabase project configured (GET
+ * /api/config returns null keys) -- in that mode getAccessToken() simply
+ * returns null and the gate in recorder.js has nothing to check against, so
+ * treat "accounts not configured" as a deployment error, not a fallback.
  *
  * The Supabase client is the one dependency-on-a-CDN in this app. Reimplementing
  * the OAuth/session-refresh dance by hand is far more code and far easier to get
@@ -24,11 +27,10 @@ export function getAccessToken() {
 }
 
 // Fired whenever the session becomes signed-in -- on a fresh interactive
-// sign-in, but also when a page load restores an existing one. Recording
-// never requires being signed in first, so the common case is: someone is
-// already partway through recording anonymously, then signs in to make sure
-// their work is saved. That only works if *something* links the speaker
-// already in progress to the account after the fact -- this is that hook.
+// sign-in, but also when a page load restores an existing one (including
+// returning from a Google OAuth redirect). recorder.js listens for this both
+// to resume a registration that was blocked on signing in, and to retroactively
+// link an older, already-in-progress speaker to the account that just signed in.
 const signedInListeners = [];
 export function onSignedIn(fn) {
   signedInListeners.push(fn);
@@ -87,7 +89,7 @@ function renderAuthbar() {
 
 // --- sign in / sign up modal ---------------------------------------------
 
-function openAuthModal() {
+export function openAuthModal() {
   setTab('signin');
   setAuthStatus('');
   $('#auth-modal-backdrop').classList.remove('hidden');

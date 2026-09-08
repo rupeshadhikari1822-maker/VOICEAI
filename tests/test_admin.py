@@ -183,7 +183,9 @@ def test_speakers_list_includes_a_known_speaker(client, consent_version):
     assert speaker_id in ids
     row = next(s for s in body["speakers"] if s["speaker_id"] == speaker_id)
     assert row["name"] == PII["name"]
-    assert row["linked_account"] is False
+    # Recording requires a signed-in account, so a speaker made via
+    # make_speaker() always has one linked from creation.
+    assert row["linked_account"] is True
 
 
 def test_export_requires_auth(client):

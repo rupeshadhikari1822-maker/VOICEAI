@@ -8,7 +8,7 @@
 
 import { Recorder, encodeWav, analyze, gate, dbfs } from '/static/recorder/audio.js';
 import { runPreflight } from '/static/recorder/preflight.js';
-import { initAuth, getAccessToken, onSignedIn } from '/static/recorder/auth.js';
+import { initAuth, getAccessToken, onSignedIn, openAuthModal } from '/static/recorder/auth.js';
 import { t, applyStaticTranslations, initLangSelector, onLangChange } from '/static/recorder/i18n.js';
 import { Waveform } from '/static/recorder/waveform.js';
 
@@ -86,6 +86,37 @@ function clearPersistedSession() {
   } catch (_) { /* nothing to clear */ }
 }
 
+// --- resuming registration across a sign-in redirect -----------------------
+//
+// Continue is blocked until the contributor is signed in. Google's OAuth flow
+// leaves the page and comes back on a fresh reload, which would otherwise lose
+// track of "they had already agreed to consent and clicked Continue" -- this
+// is what survives that round trip. Password sign-in/sign-up never reloads,
+// so it doesn't strictly need this, but goes through the same path either way.
+
+const PENDING_CONTINUE_KEY = 'voiceai.pendingConsentContinue';
+
+function savePendingContinue(consentAccepted) {
+  try {
+    localStorage.setItem(PENDING_CONTINUE_KEY, JSON.stringify({ consentAccepted }));
+  } catch (_) { /* private browsing / storage disabled */ }
+}
+
+function loadPendingContinue() {
+  try {
+    const raw = localStorage.getItem(PENDING_CONTINUE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch (_) {
+    return null;
+  }
+}
+
+function clearPendingContinue() {
+  try {
+    localStorage.removeItem(PENDING_CONTINUE_KEY);
+  } catch (_) { /* nothing to clear */ }
+}
+
 /** Resumes a persisted speaker+session: re-checks storage, restores the
  * sent/failed counters from the server, and skips straight to mic check.
  * Returns false (and clears the stale entry) if anything about it no longer
@@ -158,6 +189,16 @@ onSignedIn(async () => {
   }
 });
 
+// Consent was agreed to and Continue was clicked, but signing in was still
+// required -- resume registration now that it's done. Covers both the modal
+// closing after a same-page sign-in and returning from a Google redirect.
+onSignedIn(async () => {
+  const pending = loadPendingContinue();
+  if (!pending || state.speakerId) return;
+  clearPendingContinue();
+  await registerAndProceed(pending.consentAccepted);
+});
+
 // --- boot ---------------------------------------------------------------
 
 async function boot() {
@@ -201,19 +242,35 @@ async function boot() {
   }
 }
 
-// --- step 1: consent -> register (consent-only) -> preflight -> mic check ---
+// --- step 1: consent -> sign in -> register (consent-only) -> preflight -> mic check ---
 //
 // The profile form (name, demographics) is deliberately NOT here: it comes
 // after recording, as a "save your contribution" step. But a Speaker row has
 // to exist before recording can start at all -- clips FK to it and object
 // keys are namespaced by speaker_id -- so consenting creates a bare speaker
 // (consent only, every profile field left null) immediately.
+//
+// Registering that speaker requires a signed-in account (enforced again by
+// the server, which is the real gate): the commercial rights assignment in
+// the consent above has to be traceable to a real account from the moment
+// it's made, and recording must not be reachable at all without one.
 
 $('#consent-agree').addEventListener('change', (e) => {
   $('#consent-continue').disabled = !e.target.checked;
 });
 
 $('#consent-continue').addEventListener('click', async () => {
+  const consentAccepted = $('#consent-agree').checked;
+  if (!getAccessToken()) {
+    setStatus($('#consent-status'), t('status.signInRequired'));
+    savePendingContinue(consentAccepted);
+    openAuthModal();
+    return;
+  }
+  await registerAndProceed(consentAccepted);
+});
+
+async function registerAndProceed(consentAccepted) {
   const status = $('#consent-status');
   const button = $('#consent-continue');
   button.disabled = true;
@@ -225,7 +282,7 @@ $('#consent-continue').addEventListener('click', async () => {
       body: JSON.stringify({
         consent: {
           version: state.config.consent.version,
-          accepted: $('#consent-agree').checked,
+          accepted: consentAccepted,
           commercial_use: true,
         },
       }),
@@ -270,7 +327,7 @@ $('#consent-continue').addEventListener('click', async () => {
     setStatus(status, t('error.sendFailed', { error: err.message }), 'error');
     button.disabled = false;
   }
-});
+}
 
 // --- final step: save profile (after recording) ----------------------------
 
