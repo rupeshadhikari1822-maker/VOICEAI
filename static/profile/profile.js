@@ -2,8 +2,8 @@
  * Account profile: personal details (editable) + the recordings linked to it.
  *
  * Reuses the recorder's auth.js and i18n.js directly rather than duplicating
- * the Supabase client or the string table -- this page needs the exact same
- * header/auth-modal markup (see index.html) for those modules' DOM queries
+ * the Supabase client or the string table -- this page needs the same
+ * `#authbar` header markup (see index.html) for that module's DOM queries
  * to work, which is why it's duplicated rather than shared as a template.
  */
 

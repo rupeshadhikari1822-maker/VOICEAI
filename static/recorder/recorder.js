@@ -8,7 +8,7 @@
 
 import { Recorder, encodeWav, analyze, gate, dbfs } from '/static/recorder/audio.js';
 import { runPreflight } from '/static/recorder/preflight.js';
-import { initAuth, getAccessToken, onSignedIn, openAuthModal } from '/static/recorder/auth.js';
+import { initAuth, getAccessToken, onSignedIn } from '/static/recorder/auth.js';
 import { t, applyStaticTranslations, initLangSelector, onLangChange } from '/static/recorder/i18n.js';
 import { Waveform } from '/static/recorder/waveform.js';
 
@@ -86,37 +86,6 @@ function clearPersistedSession() {
   } catch (_) { /* nothing to clear */ }
 }
 
-// --- resuming registration across a sign-in redirect -----------------------
-//
-// Continue is blocked until the contributor is signed in. Google's OAuth flow
-// leaves the page and comes back on a fresh reload, which would otherwise lose
-// track of "they had already agreed to consent and clicked Continue" -- this
-// is what survives that round trip. Password sign-in/sign-up never reloads,
-// so it doesn't strictly need this, but goes through the same path either way.
-
-const PENDING_CONTINUE_KEY = 'voiceai.pendingConsentContinue';
-
-function savePendingContinue(consentAccepted) {
-  try {
-    localStorage.setItem(PENDING_CONTINUE_KEY, JSON.stringify({ consentAccepted }));
-  } catch (_) { /* private browsing / storage disabled */ }
-}
-
-function loadPendingContinue() {
-  try {
-    const raw = localStorage.getItem(PENDING_CONTINUE_KEY);
-    return raw ? JSON.parse(raw) : null;
-  } catch (_) {
-    return null;
-  }
-}
-
-function clearPendingContinue() {
-  try {
-    localStorage.removeItem(PENDING_CONTINUE_KEY);
-  } catch (_) { /* nothing to clear */ }
-}
-
 /** Resumes a persisted speaker+session: re-checks storage, restores the
  * sent/failed counters from the server, and skips straight to mic check.
  * Returns false (and clears the stale entry) if anything about it no longer
@@ -189,16 +158,6 @@ onSignedIn(async () => {
   }
 });
 
-// Consent was agreed to and Continue was clicked, but signing in was still
-// required -- resume registration now that it's done. Covers both the modal
-// closing after a same-page sign-in and returning from a Google redirect.
-onSignedIn(async () => {
-  const pending = loadPendingContinue();
-  if (!pending || state.speakerId) return;
-  clearPendingContinue();
-  await registerAndProceed(pending.consentAccepted);
-});
-
 // --- boot ---------------------------------------------------------------
 
 async function boot() {
@@ -228,6 +187,15 @@ async function boot() {
   }
 
   if (resumed) return;
+
+  // Signing in now happens on its own page (/login) before the contributor
+  // ever reaches consent, not as a modal gate partway through it -- so a
+  // fresh (non-resumed) visit with no session shouldn't render consent at
+  // all, it should bounce straight to /login and come back once signed in.
+  if (!getAccessToken()) {
+    window.location.href = `/login?next=${encodeURIComponent('/studio')}`;
+    return;
+  }
 
   $('#consent-text').innerHTML = renderConsentMarkdown(state.config.consent.text);
   $('#consent-version').textContent = state.config.consent.version;
@@ -261,10 +229,11 @@ $('#consent-agree').addEventListener('change', (e) => {
 
 $('#consent-continue').addEventListener('click', async () => {
   const consentAccepted = $('#consent-agree').checked;
+  // boot() already redirected to /login if there was never a session; this
+  // only catches the rare case of the token expiring in the gap between
+  // page load and clicking Continue.
   if (!getAccessToken()) {
-    setStatus($('#consent-status'), t('status.signInRequired'));
-    savePendingContinue(consentAccepted);
-    openAuthModal();
+    window.location.href = `/login?next=${encodeURIComponent('/studio')}`;
     return;
   }
   await registerAndProceed(consentAccepted);

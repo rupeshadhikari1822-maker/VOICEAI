@@ -309,10 +309,6 @@ export const STRINGS = {
   // --- status / error messages --------------------------------------------------
   'status.sending': { en: 'Sending…', ne: 'पठाइँदै…' },
   'status.settingUp': { en: 'Setting up…', ne: 'सेटअप हुँदै…' },
-  'status.signInRequired': {
-    en: 'Sign in or create a free account to continue.',
-    ne: 'जारी राख्न साइन इन गर्नुहोस् वा नि:शुल्क खाता खोल्नुहोस्।',
-  },
   'status.uploadChecking': { en: 'Checking upload…', ne: 'अपलोड जाँच गर्दै…' },
   'status.openingMic': { en: 'Opening microphone…', ne: 'माइक खोल्दै…' },
   'status.roomTooLoud': {

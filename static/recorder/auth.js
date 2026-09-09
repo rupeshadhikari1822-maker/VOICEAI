@@ -1,12 +1,12 @@
 /**
  * Accounts: sign in / sign up / Google, backed by Supabase Auth.
  *
- * The recorder flow (recorder.js) requires a signed-in session before it will
- * register a speaker, so `openAuthModal` doubles as that gate. `initAuth` is
- * still a no-op if the server has no Supabase project configured (GET
- * /api/config returns null keys) -- in that mode getAccessToken() simply
- * returns null and the gate in recorder.js has nothing to check against, so
- * treat "accounts not configured" as a deployment error, not a fallback.
+ * The actual sign-in/sign-up UI lives on its own page (`/login`,
+ * static/auth/), not in a modal here -- recorder.js redirects there itself if
+ * it boots without a session. `initAuth` is still a no-op if the server has
+ * no Supabase project configured (GET /api/config returns null keys) -- in
+ * that mode getAccessToken() simply returns null, so treat "accounts not
+ * configured" as a deployment error, not a fallback.
  *
  * The Supabase client is the one dependency-on-a-CDN in this app. Reimplementing
  * the OAuth/session-refresh dance by hand is far more code and far easier to get
@@ -17,7 +17,6 @@
 import { t, onLangChange } from '/static/recorder/i18n.js';
 
 const $ = (sel) => document.querySelector(sel);
-const $$ = (sel) => Array.from(document.querySelectorAll(sel));
 
 let client = null;
 let session = null;
@@ -28,9 +27,9 @@ export function getAccessToken() {
 
 // Fired whenever the session becomes signed-in -- on a fresh interactive
 // sign-in, but also when a page load restores an existing one (including
-// returning from a Google OAuth redirect). recorder.js listens for this both
-// to resume a registration that was blocked on signing in, and to retroactively
-// link an older, already-in-progress speaker to the account that just signed in.
+// returning from a Google OAuth redirect). recorder.js listens for this to
+// retroactively link an older, already-in-progress speaker to the account
+// that just signed in.
 const signedInListeners = [];
 export function onSignedIn(fn) {
   signedInListeners.push(fn);
@@ -49,7 +48,6 @@ export async function initAuth(config) {
   );
   client = createClient(url, anonKey);
 
-  wireAuthModal();
   onLangChange(() => renderAuthbar());
 
   const { data } = await client.auth.getSession();
@@ -79,84 +77,43 @@ function renderAuthbar() {
   } else {
     const label = t('auth.signIn');
     authbar.innerHTML = `
-      <button type="button" id="auth-open" class="icon-btn" aria-label="${escapeHtml(label)}" title="${escapeHtml(label)}">
+      <a href="/login?next=${encodeURIComponent(window.location.pathname)}" id="auth-open" class="icon-btn" aria-label="${escapeHtml(label)}" title="${escapeHtml(label)}">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-      </button>
+      </a>
     `;
-    $('#auth-open').addEventListener('click', openAuthModal);
   }
 }
 
-// --- sign in / sign up modal ---------------------------------------------
+// --- sign in / sign up / Google, used by the /login page -------------------
+//
+// These throw on failure (with a message already run through
+// authErrorMessage) and simply return on success -- the caller reacts to the
+// `onSignedIn` notification above rather than a return value here, since
+// Google's redirect-based flow never returns to the caller at all.
 
-export function openAuthModal() {
-  setTab('signin');
-  setAuthStatus('');
-  $('#auth-modal-backdrop').classList.remove('hidden');
+export async function signInWithPassword(email, password) {
+  if (!client) throw new Error(t('auth.errorGeneric'));
+  const { error } = await client.auth.signInWithPassword({ email, password });
+  if (error) throw new Error(authErrorMessage(error));
 }
 
-function closeAuthModal() {
-  $('#auth-modal-backdrop').classList.add('hidden');
-}
-
-function setTab(tab) {
-  $$('.auth-tab').forEach((btn) => btn.classList.toggle('active', btn.dataset.tab === tab));
-  $('#auth-submit').textContent = tab === 'signup' ? t('auth.signUpTab') : t('auth.signInSubmit');
-  $('#auth-form').dataset.mode = tab;
-}
-
-function setAuthStatus(message, kind = '') {
-  const el = $('#auth-status');
-  el.textContent = message;
-  el.className = `status ${kind}`;
-}
-
-function wireAuthModal() {
-  $('#auth-modal-close').addEventListener('click', closeAuthModal);
-  $('#auth-modal-backdrop').addEventListener('click', (e) => {
-    if (e.target.id === 'auth-modal-backdrop') closeAuthModal();
+/** Returns true if a session was created immediately, false if email
+ * confirmation is required before one exists. */
+export async function signUpWithPassword(email, password, fullName) {
+  if (!client) throw new Error(t('auth.errorGeneric'));
+  const { data, error } = await client.auth.signUp({
+    email,
+    password,
+    options: fullName ? { data: { full_name: fullName } } : undefined,
   });
-  $$('.auth-tab').forEach((btn) => btn.addEventListener('click', () => setTab(btn.dataset.tab)));
+  if (error) throw new Error(authErrorMessage(error));
+  return !!data.session;
+}
 
-  $('#auth-form').addEventListener('submit', async (event) => {
-    event.preventDefault();
-    const mode = event.target.dataset.mode || 'signin';
-    const form = new FormData(event.target);
-    const email = (form.get('email') || '').toString().trim();
-    const password = (form.get('password') || '').toString();
-    const button = $('#auth-submit');
-    button.disabled = true;
-    setAuthStatus(mode === 'signup' ? t('auth.creatingAccount') : t('auth.signingIn'));
-
-    try {
-      if (mode === 'signup') {
-        const { data, error } = await client.auth.signUp({ email, password });
-        if (error) throw error;
-        if (!data.session) {
-          setAuthStatus(t('auth.checkEmail'), 'ok');
-          button.disabled = false;
-          return;
-        }
-      } else {
-        const { error } = await client.auth.signInWithPassword({ email, password });
-        if (error) throw error;
-      }
-      closeAuthModal();
-    } catch (err) {
-      setAuthStatus(authErrorMessage(err), 'error');
-    } finally {
-      button.disabled = false;
-    }
-  });
-
-  $('#auth-google').addEventListener('click', async () => {
-    try {
-      const { error } = await client.auth.signInWithOAuth({ provider: 'google' });
-      if (error) throw error;
-    } catch (err) {
-      setAuthStatus(authErrorMessage(err), 'error');
-    }
-  });
+export async function signInWithGoogle(redirectTo) {
+  if (!client) throw new Error(t('auth.errorGeneric'));
+  const { error } = await client.auth.signInWithOAuth({ provider: 'google', options: { redirectTo } });
+  if (error) throw new Error(authErrorMessage(error));
 }
 
 function authErrorMessage(err) {
