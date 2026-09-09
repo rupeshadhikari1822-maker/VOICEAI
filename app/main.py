@@ -22,8 +22,10 @@ from app.services.storage import StorageError
 logger = logging.getLogger("voice")
 
 _STATIC_DIR = get_settings().base_dir / "static"
+_LANDING_INDEX = _STATIC_DIR / "landing" / "index.html"
 _RECORDER_INDEX = _STATIC_DIR / "recorder" / "index.html"
 _PROFILE_INDEX = _STATIC_DIR / "profile" / "index.html"
+_LOGIN_INDEX = _STATIC_DIR / "auth" / "index.html"
 
 
 @asynccontextmanager
@@ -48,7 +50,18 @@ def create_app() -> FastAPI:
 
     @app.get("/", include_in_schema=False)
     def index() -> FileResponse:
+        return FileResponse(_LANDING_INDEX)
+
+    @app.get("/studio", include_in_schema=False)
+    def studio_page() -> FileResponse:
+        # No server-side auth gate here either -- the session lives in the
+        # browser (Supabase JS SDK), not a cookie the server can see. recorder.js
+        # checks for one on load and redirects to /login itself if there isn't one.
         return FileResponse(_RECORDER_INDEX)
+
+    @app.get("/login", include_in_schema=False)
+    def login_page() -> FileResponse:
+        return FileResponse(_LOGIN_INDEX)
 
     @app.get("/profile", include_in_schema=False)
     def profile_page() -> FileResponse:

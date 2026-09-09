@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>CloudFRM — Neural Voice Synthetics &amp; Dataset Marketplace</title>
+<!-- Google Fonts: Space Grotesk, Manrope, JetBrains Mono -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&amp;family=Manrope:wght@300;400;500;600;700&amp;family=Space+Grotesk:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols Outlined -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS with Plugins -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Configuration verbatim -->
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "surface-container-high": "#1d2c30",
+            "on-primary-container": "#004d46",
+            "text-muted": "#3A6367",
+            "primary-fixed": "#68f9e7",
+            "on-error-container": "#ffdad6",
+            "surface-bright": "#2c3c3f",
+            "secondary-fixed-dim": "#a8c8ff",
+            "secondary-fixed": "#d5e3ff",
+            "surface": "#061619",
+            "on-tertiary-fixed": "#002021",
+            "on-primary": "#003732",
+            "surface-container-low": "#0e1e21",
+            "secondary-container": "#3491ff",
+            "outline-variant": "#3c4947",
+            "text-primary": "#F0FBFA",
+            "tertiary-fixed": "#aeeeef",
+            "tertiary": "#99d8da",
+            "tertiary-fixed-dim": "#93d1d3",
+            "primary": "#4de2d2",
+            "text-secondary": "#8AAEB1",
+            "surface-container-lowest": "#021013",
+            "surface-container": "#122225",
+            "surface-overlay": "#061A1E",
+            "background": "#061619",
+            "on-primary-fixed-variant": "#005049",
+            "inverse-surface": "#d4e6ea",
+            "on-secondary": "#003061",
+            "secondary": "#a8c8ff",
+            "surface-variant": "#28373b",
+            "tertiary-container": "#7ebcbe",
+            "on-secondary-container": "#002955",
+            "on-surface-variant": "#bbcac6",
+            "glow-azure": "#1A6BFF",
+            "outline": "#859491",
+            "on-secondary-fixed-variant": "#004689",
+            "surface-glass": "rgba(6, 26, 30, 0.65)",
+            "primary-container": "#1ec6b6",
+            "on-error": "#690005",
+            "error": "#ffb4ab",
+            "surface-dim": "#061619",
+            "glow-cyan": "#00F0FF",
+            "on-background": "#d4e6ea",
+            "surface-container-highest": "#28373b",
+            "on-primary-fixed": "#00201d",
+            "glow-teal": "#1EC6B6",
+            "on-tertiary-container": "#004c4e",
+            "on-tertiary-fixed-variant": "#004f51",
+            "border-glass": "rgba(30, 198, 182, 0.22)",
+            "on-surface": "#d4e6ea",
+            "inverse-primary": "#006a61",
+            "on-tertiary": "#003738",
+            "primary-fixed-dim": "#44dccb",
+            "error-container": "#93000a",
+            "surface-tint": "#44dccb",
+            "on-secondary-fixed": "#001b3c",
+            "inverse-on-surface": "#233336",
+            "surface-base": "#020B0D"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+          "spacing": {
+            "gutter-mobile": "1rem",
+            "3xl": "4rem",
+            "gutter-desktop": "2rem",
+            "xs": "0.5rem",
+            "xl": "2rem",
+            "margin-mobile": "1rem",
+            "lg": "1.5rem",
+            "xxs": "0.25rem",
+            "margin-desktop": "3rem",
+            "margin-tablet": "2rem",
+            "gutter-tablet": "1.5rem",
+            "md": "1rem",
+            "sm": "0.75rem",
+            "2xl": "3rem"
+          },
+          "fontFamily": {
+            "headline-md": ["Space Grotesk"],
+            "body-md": ["Manrope"],
+            "headline-sm": ["Space Grotesk"],
+            "headline-lg": ["Space Grotesk"],
+            "headline-xl": ["Space Grotesk"],
+            "label-md": ["JetBrains Mono"],
+            "body-sm": ["Manrope"],
+            "body-lg": ["Manrope"],
+            "label-lg": ["JetBrains Mono"],
+            "headline-xl-mobile": ["Space Grotesk"],
+            "label-sm": ["JetBrains Mono"],
+            "headline-lg-mobile": ["Space Grotesk"]
+          },
+          "fontSize": {
+            "headline-md": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+            "body-md": ["15px", { "lineHeight": "24px", "fontWeight": "400" }],
+            "headline-sm": ["20px", { "lineHeight": "28px", "fontWeight": "500" }],
+            "headline-lg": ["36px", { "lineHeight": "44px", "letterSpacing": "-0.015em", "fontWeight": "600" }],
+            "headline-xl": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+            "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.04em", "fontWeight": "500" }],
+            "body-sm": ["13px", { "lineHeight": "20px", "fontWeight": "400" }],
+            "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+            "label-lg": ["14px", { "lineHeight": "20px", "letterSpacing": "0.02em", "fontWeight": "500" }],
+            "headline-xl-mobile": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "700" }],
+            "label-sm": ["10px", { "lineHeight": "14px", "letterSpacing": "0.06em", "fontWeight": "600" }],
+            "headline-lg-mobile": ["26px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600" }]
+          }
+        }
+      }
+    }
+  </script>
+<style>
+    /* Custom glow highlights and backdrop filters */
+    .glow-bloom {
+      box-shadow: 0 0 35px -5px rgba(30, 198, 182, 0.35);
+    }
+    .glow-cyan-bloom {
+      box-shadow: 0 0 25px rgba(0, 240, 255, 0.4);
+    }
+    .neon-border-glow {
+      box-shadow: 0 0 20px -3px rgba(30, 198, 182, 0.25), inset 0 1px 0 0 rgba(255, 255, 255, 0.12);
+    }
+    .waveform-bar {
+      transition: height 0.15s ease-in-out;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 9999px;
+      background: #1EC6B6;
+      cursor: pointer;
+      box-shadow: 0 0 12px #00F0FF;
+      border: 2px solid #021013;
+    }
+  </style>
+</head>
+<body class="bg-surface-base text-text-primary font-body-md text-body-md antialiased min-h-screen relative overflow-x-hidden selection:bg-primary-container selection:text-surface-base">
+<!-- Scroll-scrubbed background: CloudFRM logo zoom-in, advances one frame per scroll tick across the whole page -->
+<div class="fixed inset-0 z-0 overflow-hidden bg-surface-base">
+<canvas class="w-full h-full block mix-blend-screen opacity-90" id="scrollFilmCanvas"></canvas>
+</div>
+<!-- Ambient Background Wave & Mesh Canvas Layer -->
+<div class="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+<div class="absolute -top-[20%] left-1/2 -translate-x-1/2 w-[1100px] h-[650px] bg-gradient-to-b from-[#1EC6B6]/15 via-[#0088FF]/10 to-transparent blur-[140px] rounded-full"></div>
+<div class="absolute top-[40%] -left-[10%] w-[600px] h-[600px] bg-[#1A6BFF]/10 blur-[160px] rounded-full"></div>
+<div class="absolute top-[65%] -right-[10%] w-[700px] h-[700px] bg-[#1EC6B6]/10 blur-[180px] rounded-full"></div>
+<canvas class="w-full h-full opacity-30" id="bgSoundwaveCanvas"></canvas>
+</div>
+<!-- Shared Component: TopNavBar -->
+<header class="fixed top-4 left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] max-w-7xl rounded-xl z-50 bg-surface-glass dark:bg-surface-glass backdrop-blur-md border border-outline-variant/30 dark:border-outline-variant/30 shadow-2xl shadow-surface-base/80">
+<div class="flex items-center justify-between px-6 py-3 w-full">
+<!-- Brand Logo Container -->
+<a class="flex items-center gap-3 group" href="#">
+<img alt="CloudFRM.AI Emblem" class="w-9 h-9 object-contain drop-shadow-[0_0_12px_rgba(30,198,182,0.6)] group-hover:scale-105 transition-transform duration-200" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD5yhQkpao8Y6yJ_JldSVr8d5TQ5IwOljGeOfX5Ou2rmiyLuZTAbUtibqYOc8eeFYeZSQOEsg-Eq-VgE3-0voNDc7YjxAsZybr_4afiKNZ3GBEWtw39Pf6LscUh6w7cGI0IqjYbl9E2Cegut3UPB3dzUZxw2OJemXjlAeR19VotcfJmB7C6A4YFHldQXiwckgRP_h20p5uVUTg885W5Z4JynbJDbnUHb4ngnZEENn5B8GDYumkVSLYRDhmXHmayiYEBUnU"/>
+<div class="flex items-baseline">
+<span class="font-headline-md text-headline-md font-bold tracking-tight text-text-primary dark:text-text-primary">CloudFRM</span>
+<span class="font-label-sm text-label-sm text-primary tracking-widest ml-1 font-semibold">.AI</span>
+</div>
+</a>
+<!-- Navigation Links -->
+<nav class="hidden md:flex items-center gap-8">
+<a class="text-primary dark:text-primary font-medium hover:text-primary dark:hover:text-primary transition-colors duration-200" href="#platform">Platform</a>
+<a class="text-text-secondary dark:text-text-secondary font-medium hover:text-primary dark:hover:text-primary transition-colors duration-200" href="#pipeline">Neural Pipeline</a>
+<a class="text-text-secondary dark:text-text-secondary font-medium hover:text-primary dark:hover:text-primary transition-colors duration-200" href="#monetization">Monetization</a>
+<a class="text-text-secondary dark:text-text-secondary font-medium hover:text-primary dark:hover:text-primary transition-colors duration-200" href="#developers">Developers</a>
+</nav>
+<!-- Trailing Action Buttons -->
+<div class="flex items-center gap-3">
+<a class="text-text-secondary dark:text-text-secondary font-medium hover:text-primary dark:hover:text-primary transition-colors duration-200 px-3 py-1.5 font-label-md text-label-md transition-all duration-200 active:scale-95" href="/login?next=%2Fstudio">
+          Sign In
+        </a>
+<a class="relative group inline-flex items-center justify-center px-4 py-2 rounded-lg bg-gradient-to-r from-primary-container to-secondary-container text-surface-base font-label-md text-label-md font-bold transition-all duration-200 active:scale-95 shadow-[0_0_16px_rgba(30,198,182,0.35)] hover:shadow-[0_0_22px_rgba(0,240,255,0.6)]" href="/login?next=%2Fstudio">
+          Launch Studio
+        </a>
+</div>
+</div>
+</header>
+<!-- Main Canvas Content -->
+<main class="relative z-10 pt-32 md:pt-40">
+<!-- HERO SECTION -->
+<section class="max-w-7xl mx-auto px-6 lg:px-8 pb-24">
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+<!-- Left Hero Content -->
+<div class="lg:col-span-12 space-y-6 text-left max-w-3xl">
+<!-- Live Telemetry Badge -->
+<div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-surface-container-lowest/80 border border-border-glass backdrop-blur-md">
+<span class="w-2 h-2 rounded-full bg-primary-container animate-pulse shadow-[0_0_8px_#1EC6B6]"></span>
+<span class="font-label-sm text-label-sm text-primary uppercase tracking-wider">Zero-Shot Synthesis Engine v4.2 Live</span>
+<span class="text-text-muted">|</span>
+<span class="font-label-sm text-label-sm text-text-secondary">Latency: 18ms</span>
+</div>
+<!-- Headline -->
+<h1 class="font-headline-xl text-headline-xl md:text-headline-xl font-bold tracking-tight text-text-primary">
+            Monetize Your Voice. <br/>
+<span class="bg-gradient-to-r from-primary via-glow-cyan to-secondary bg-clip-text text-transparent drop-shadow-[0_0_25px_rgba(30,198,182,0.3)]">
+              Power Next-Gen AI.
+            </span>
+</h1>
+<!-- Value Proposition Subtitle -->
+<p class="font-body-lg text-body-lg text-text-secondary max-w-2xl leading-relaxed">
+            Submit studio-calibrated voice datasets to decentralized neural clusters. Protect vocal identity with cryptographic watermarking and receive automated smart-contract royalties per API inference token.
+          </p>
+<!-- Primary Actions -->
+<div class="pt-4 flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
+<a class="inline-flex items-center justify-center gap-2.5 px-7 py-3.5 rounded-xl bg-gradient-to-r from-[#1EC6B6] to-[#0088FF] text-surface-base font-label-lg text-label-lg font-bold shadow-[0_0_24px_rgba(30,198,182,0.45)] hover:shadow-[0_0_32px_rgba(0,240,255,0.7)] transition-all duration-200 active:scale-95" href="#pipeline">
+<span class="material-symbols-outlined text-surface-base">mic</span>
+<span>Join Platform &amp; Upload Voice</span>
+</a>
+</div>
+<!-- Feature Footprint Micro-Grid -->
+<div class="pt-6 grid grid-cols-3 gap-4 border-t border-outline-variant/30">
+<div>
+<p class="font-label-md text-label-md text-text-muted">ACOUSTIC FIDELITY</p>
+<p class="font-headline-sm text-headline-sm font-semibold text-text-primary mt-0.5">96kHz / 32-bit</p>
+</div>
+<div>
+<p class="font-label-md text-label-md text-text-muted">ETHICAL WATERMARK</p>
+<p class="font-headline-sm text-headline-sm font-semibold text-primary mt-0.5">SHA-256 Poly</p>
+</div>
+<div>
+<p class="font-label-md text-label-md text-text-muted">PAYOUT LATENCY</p>
+<p class="font-headline-sm text-headline-sm font-semibold text-text-primary mt-0.5">Instant On-Chain</p>
+</div>
+</div>
+</div>
+
+</div>
+</section>
+<!-- SECTION 2: PROGRESSION ARCHITECTURE (HOW IT WORKS) -->
+<section class="max-w-7xl mx-auto px-6 lg:px-8 py-24 border-t border-outline-variant/20" id="pipeline">
+<div class="text-center max-w-3xl mx-auto mb-16">
+<div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-surface-container-high/60 border border-border-glass mb-4">
+<span class="font-label-sm text-label-sm text-primary tracking-widest uppercase">Decentralized Production Flow</span>
+</div>
+<h2 class="font-headline-xl text-headline-xl font-bold text-text-primary tracking-tight">
+          From Raw Audio to <span class="text-primary">Perpetual Royalties</span>
+</h2>
+<p class="font-body-lg text-body-lg text-text-secondary mt-4">
+          Three streamlined modules engineer your acoustic footprint into an encrypted, cryptographically secured revenue generator.
+        </p>
+</div>
+<!-- 3-Step Timeline Grid -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-8 relative">
+<!-- Step 1 Card -->
+<div class="group relative rounded-2xl bg-surface-glass border border-border-glass p-8 backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:border-glow-cyan hover:shadow-[0_12px_40px_rgba(0,240,255,0.15)] flex flex-col justify-between">
+<div class="absolute -top-3.5 left-6 px-3 py-0.5 rounded-full bg-surface-container-lowest border border-primary text-primary font-label-sm text-label-sm font-bold shadow-[0_0_12px_rgba(30,198,182,0.4)]">
+            PHASE 01
+          </div>
+<div>
+<div class="w-14 h-14 rounded-2xl bg-surface-container-high border border-border-glass flex items-center justify-center text-primary mb-6 shadow-inner">
+<span class="material-symbols-outlined text-3xl">upload_file</span>
+</div>
+<h3 class="font-headline-sm text-headline-sm font-bold text-text-primary mb-3">Studio-Grade Submission</h3>
+<p class="font-body-md text-body-md text-text-secondary leading-relaxed">
+              Upload 30 mins of calibrated voice prompts or raw lossless studio audio. Our distributed client runs automated acoustic validation, spectral de-noising, and room reflection isolation.
+            </p>
+</div>
+<div class="mt-8 pt-4 border-t border-outline-variant/30 flex items-center justify-between font-label-sm text-label-sm">
+<span class="text-text-muted">Acoustic Requirement</span>
+<span class="text-primary font-mono">&gt; 54dB SNR Floor</span>
+</div>
+</div>
+<!-- Step 2 Card -->
+<div class="group relative rounded-2xl bg-surface-glass border border-border-glass p-8 backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:border-glow-teal hover:shadow-[0_12px_40px_rgba(30,198,182,0.18)] flex flex-col justify-between">
+<div class="absolute -top-3.5 left-6 px-3 py-0.5 rounded-full bg-surface-container-lowest border border-glow-teal text-primary font-label-sm text-label-sm font-bold shadow-[0_0_12px_rgba(30,198,182,0.4)]">
+            PHASE 02
+          </div>
+<div>
+<div class="w-14 h-14 rounded-2xl bg-surface-container-high border border-border-glass flex items-center justify-center text-glow-cyan mb-6 shadow-inner">
+<span class="material-symbols-outlined text-3xl">neurology</span>
+</div>
+<h3 class="font-headline-sm text-headline-sm font-bold text-text-primary mb-3">Neural Diffusion &amp; Model Training</h3>
+<p class="font-body-md text-body-md text-text-secondary leading-relaxed">
+              Zero-shot and fine-tuned multi-lingual synthesis layers encode emotional cadence. Embedded inaudible cryptographic watermarks guarantee provenance and deepfake proof of origin.
+            </p>
+</div>
+<div class="mt-8 pt-4 border-t border-outline-variant/30 flex items-center justify-between font-label-sm text-label-sm">
+<span class="text-text-muted">Protection Standard</span>
+<span class="text-glow-cyan font-mono">AudioWatermark-X</span>
+</div>
+</div>
+<!-- Step 3 Card -->
+<div class="group relative rounded-2xl bg-surface-glass border border-border-glass p-8 backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:border-secondary-container hover:shadow-[0_12px_40px_rgba(0,136,255,0.18)] flex flex-col justify-between">
+<div class="absolute -top-3.5 left-6 px-3 py-0.5 rounded-full bg-surface-container-lowest border border-secondary-container text-secondary font-label-sm text-label-sm font-bold shadow-[0_0_12px_rgba(0,136,255,0.4)]">
+            PHASE 03
+          </div>
+<div>
+<div class="w-14 h-14 rounded-2xl bg-surface-container-high border border-border-glass flex items-center justify-center text-secondary mb-6 shadow-inner">
+<span class="material-symbols-outlined text-3xl">currency_exchange</span>
+</div>
+<h3 class="font-headline-sm text-headline-sm font-bold text-text-primary mb-3">Automated Royalty Engine</h3>
+<p class="font-body-md text-body-md text-text-secondary leading-relaxed">
+              Instant micro-royalties dispatched per API token inference or synthetic commercial playback. Smart contracts stream USDC or native tokens straight to non-custodial creator wallets.
+            </p>
+</div>
+<div class="mt-8 pt-4 border-t border-outline-variant/30 flex items-center justify-between font-label-sm text-label-sm">
+<span class="text-text-muted">Settlement Speed</span>
+<span class="text-secondary font-mono">Per-Block Execution</span>
+</div>
+</div>
+</div>
+</section>
+<!-- SECTION 3: INTERACTIVE VOICE MODEL CALCULATOR / MARKETPLACE PREVIEW -->
+<section class="max-w-7xl mx-auto px-6 lg:px-8 py-20" id="monetization">
+<div class="rounded-3xl bg-surface-container-lowest border border-border-glass p-8 md:p-12 relative overflow-hidden backdrop-blur-2xl shadow-2xl">
+<!-- Ambient radial sheen -->
+<div class="absolute -right-20 -top-20 w-96 h-96 bg-primary-container/10 rounded-full blur-3xl pointer-events-none"></div>
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
+<!-- Left Column: Estimator Controls -->
+<div class="lg:col-span-7 space-y-6">
+<div class="inline-flex items-center gap-2 font-label-sm text-label-sm text-glow-cyan uppercase tracking-widest">
+<span class="material-symbols-outlined text-base">calculate</span>
+              Decentralized Revenue Simulator
+            </div>
+<h2 class="font-headline-lg text-headline-lg font-bold text-text-primary">
+              Calculate Your Voice Asset Yield
+            </h2>
+<p class="font-body-md text-body-md text-text-secondary">
+              Tune usage parameters across production scale, synthetic dialogue duration, and target distribution tiers to forecast monthly recurring returns.
+            </p>
+<!-- Slider 1: Generation Minutes -->
+<div class="space-y-3 pt-4">
+<div class="flex justify-between items-center">
+<label class="font-label-md text-label-md text-text-primary font-medium" for="minutesSlider">Monthly Inferred Audio Minutes</label>
+<span class="font-mono text-primary font-bold text-base" id="minutesDisplay">25,000 min</span>
+</div>
+<input class="w-full h-2 bg-surface-container-high rounded-lg appearance-none cursor-pointer outline-none" id="minutesSlider" max="150000" min="5000" step="5000" type="range" value="25000"/>
+<div class="flex justify-between text-text-muted font-label-sm text-label-sm">
+<span>5,000 min</span>
+<span>75,000 min</span>
+<span>150,000+ min</span>
+</div>
+</div>
+<!-- Licensing Tier Selector -->
+<div class="space-y-2 pt-2">
+<label class="font-label-md text-label-md text-text-primary font-medium block">Licensing Ecosystem Tier</label>
+<div class="grid grid-cols-3 gap-3">
+<button class="tier-btn active px-3 py-3 rounded-xl bg-primary-container/20 border border-primary text-primary font-label-sm text-label-sm font-semibold transition-all" data-tier="1" type="button">
+                  Commercial Media
+                </button>
+<button class="tier-btn px-3 py-3 rounded-xl bg-surface-container-high border border-outline-variant/30 text-text-secondary font-label-sm text-label-sm font-semibold hover:border-glow-cyan transition-all" data-tier="2" type="button">
+                  Game Audio NPC
+                </button>
+<button class="tier-btn px-3 py-3 rounded-xl bg-surface-container-high border border-outline-variant/30 text-text-secondary font-label-sm text-label-sm font-semibold hover:border-glow-cyan transition-all" data-tier="3" type="button">
+                  Enterprise Agent
+                </button>
+</div>
+</div>
+</div>
+<!-- Right Column: Yield Projection Box -->
+<div class="lg:col-span-5">
+<div class="rounded-2xl bg-surface-base/95 border border-primary/30 p-8 shadow-2xl relative overflow-hidden neon-border-glow">
+<div class="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-bl-full pointer-events-none"></div>
+<div class="space-y-6">
+<div class="flex items-center justify-between border-b border-outline-variant/30 pb-4">
+<span class="font-label-sm text-label-sm text-text-muted uppercase">ESTIMATED RECURRING EARNINGS</span>
+<span class="w-2.5 h-2.5 rounded-full bg-primary animate-pulse"></span>
+</div>
+<div>
+<div class="flex items-baseline gap-2">
+<span class="font-headline-xl text-headline-xl font-extrabold text-text-primary tracking-tight" id="payoutUsd">$3,750</span>
+<span class="font-label-md text-label-md text-text-secondary">/ month</span>
+</div>
+<p class="font-mono text-label-md text-label-md text-primary mt-1 font-semibold" id="payoutCrypto">≈ 1.48 ETH / cycle</p>
+</div>
+<div class="space-y-2.5 pt-4 border-t border-outline-variant/30 text-body-sm font-body-sm">
+<div class="flex justify-between text-text-secondary">
+<span>Base Token Fee</span>
+<span class="font-mono text-text-primary">$0.15 / min</span>
+</div>
+<div class="flex justify-between text-text-secondary">
+<span>Smart-Contract Protocol Cut</span>
+<span class="font-mono text-text-primary">95% to Creator</span>
+</div>
+<div class="flex justify-between text-text-secondary">
+<span>Disbursement Frequency</span>
+<span class="font-mono text-glow-cyan">Continuous Real-Time</span>
+</div>
+</div>
+<a class="w-full mt-4 inline-flex items-center justify-center gap-2 py-3.5 px-6 rounded-xl bg-gradient-to-r from-primary-container to-secondary-container text-surface-base font-label-md text-label-md font-bold transition-all duration-200 hover:scale-[1.02] shadow-[0_0_18px_rgba(30,198,182,0.4)]" href="#register">
+<span class="material-symbols-outlined text-lg">account_balance_wallet</span>
+<span>Connect Wallet &amp; Mint Voice Key</span>
+</a>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- SECTION 4: ENTERPRISE & CREATOR CONVERSION BANNER -->
+<section class="max-w-7xl mx-auto px-6 lg:px-8 py-20" id="platform">
+<div class="relative rounded-3xl bg-gradient-to-r from-surface-container-high/90 via-surface-container/70 to-surface-container-lowest border border-border-glass p-8 md:p-14 overflow-hidden backdrop-blur-2xl shadow-2xl">
+<!-- Background light rays -->
+<div class="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(0,240,255,0.12),transparent_65%)] pointer-events-none"></div>
+<div class="max-w-3xl space-y-6 relative z-10">
+<div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/30">
+<span class="material-symbols-outlined text-sm text-primary">verified_user</span>
+<span class="font-label-sm text-label-sm text-primary font-semibold">Decentralized Synthetics Consortium</span>
+</div>
+<h2 class="font-headline-xl text-headline-xl font-bold text-text-primary tracking-tight">
+            Transform Your Vocal Identity into an Appreciating Digital Asset
+          </h2>
+<p class="font-body-lg text-body-lg text-text-secondary">
+            Join over 1,200 voice actors, narrators, and synthetic audio researchers. Retain 100% intellectual property sovereignty through non-custodial multi-chain licensing contracts.
+          </p>
+<!-- Input Contact / Access Form -->
+<div class="pt-4 max-w-xl">
+<form class="flex flex-col sm:flex-row gap-3" id="accessForm" onsubmit="event.preventDefault(); document.getElementById('successFeedback').classList.remove('hidden');">
+<input class="flex-grow rounded-xl bg-surface-container-lowest/90 border border-outline-variant/40 px-5 py-3.5 text-text-primary placeholder:text-text-muted font-body-md text-body-md focus:border-glow-cyan focus:ring-1 focus:ring-glow-cyan outline-none transition-all" placeholder="Enter professional or studio email..." required="" type="email"/>
+<button class="px-7 py-3.5 rounded-xl bg-primary-container text-surface-base font-label-md text-label-md font-bold hover:bg-primary transition-all duration-200 active:scale-95 shadow-[0_0_18px_rgba(30,198,182,0.35)] shrink-0" type="submit">
+                Request Access
+              </button>
+</form>
+<div class="hidden mt-3 p-3 rounded-lg bg-surface-container-high border border-primary/40 text-primary font-label-sm text-label-sm flex items-center gap-2" id="successFeedback">
+<span class="material-symbols-outlined text-base">check_circle</span>
+<span>Application received. An onboarding cryptographic key will be dispatched within 4 hours.</span>
+</div>
+<p class="font-label-sm text-label-sm text-text-muted mt-3">
+              Enterprise SDK &amp; zero-knowledge proofs available for gaming studios &amp; LLM labs.
+            </p>
+</div>
+</div>
+</div>
+</section>
+<!-- SECTION 5: DEVELOPERS API / MATRIX HIGHLIGHT -->
+<section class="max-w-7xl mx-auto px-6 lg:px-8 py-16 border-t border-outline-variant/20" id="developers">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+<div>
+<span class="font-label-sm text-label-sm text-primary tracking-widest uppercase block mb-2">High-Throughput SDK</span>
+<h3 class="font-headline-lg text-headline-lg font-bold text-text-primary">Instant Low-Latency Inference API</h3>
+<p class="font-body-md text-body-md text-text-secondary mt-3">
+            Integrate authentic synthetic speech with under 20ms time-to-first-packet across Python, Rust, and TypeScript libraries.
+          </p>
+<div class="mt-6 flex flex-wrap gap-3 font-label-sm text-label-sm">
+<span class="px-3 py-1.5 rounded-lg bg-surface-container border border-border-glass text-text-primary">REST &amp; gRPC</span>
+<span class="px-3 py-1.5 rounded-lg bg-surface-container border border-border-glass text-text-primary">WebSocket Stream</span>
+<span class="px-3 py-1.5 rounded-lg bg-surface-container border border-border-glass text-text-primary">ONNX Export</span>
+</div>
+</div>
+<!-- Terminal Preview Block -->
+<div class="rounded-2xl bg-surface-container-lowest border border-border-glass p-5 font-label-sm text-label-sm shadow-xl overflow-x-auto">
+<div class="flex items-center justify-between pb-3 border-b border-outline-variant/20 text-text-muted">
+<div class="flex gap-2">
+<div class="w-3 h-3 rounded-full bg-red-500/60"></div>
+<div class="w-3 h-3 rounded-full bg-yellow-500/60"></div>
+<div class="w-3 h-3 rounded-full bg-green-500/60"></div>
+</div>
+<span>synthesize_stream.ts</span>
+</div>
+<pre class="pt-4 text-text-secondary font-mono leading-relaxed"><span class="text-glow-azure">import</span> { CloudFRMClient } <span class="text-glow-azure">from</span> <span class="text-glow-teal">'@cloudfrm/neural-sdk'</span>;
+
+<span class="text-text-muted">// Authenticate with decentralized cryptographic key</span>
+<span class="text-glow-azure">const</span> client = <span class="text-glow-azure">new</span> CloudFRMClient({
+  modelId: <span class="text-glow-teal">'CLOUD-88X'</span>,
+  royaltyStream: <span class="text-glow-cyan">'0x82a9...d3f9'</span>
+});
+
+<span class="text-glow-azure">const</span> stream = <span class="text-glow-azure">await</span> client.synthesize({
+  prompt: <span class="text-glow-teal">"Next generation conversational autonomy activated."</span>,
+  format: <span class="text-glow-teal">"pcm_96khz"</span>
+});</pre>
+</div>
+</div>
+</section>
+</main>
+<!-- Shared Component: Footer -->
+<footer class="w-full rounded-t-2xl bg-surface-container-lowest/80 dark:bg-surface-container-lowest/80 backdrop-blur-xl border-t border-outline-variant/20 dark:border-outline-variant/20 shadow-inner mt-24">
+<div class="max-w-7xl mx-auto px-6 py-12 flex flex-col md:flex-row justify-between items-center gap-6 w-full">
+<!-- Brand & Copyright block -->
+<div class="flex flex-col sm:flex-row items-center gap-4 text-center sm:text-left">
+<a class="flex items-center gap-2 group" href="#">
+<img alt="CloudFRM.AI" class="w-7 h-7 object-contain group-hover:scale-105 transition-transform" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA4vQa8yMqUieJ1zYrIHLzjmey7HqgNok_0edXpgQLfIyDORSq5fvtPgx_8mtj5yH5uJtvbW6wQxA7_FpQm2j-pUTqro1xWevTptoWRJQ2crwlBE-G_DlSsb1V_zzJRY5vpDi-8pLf1ScRFFiJXEVrmceSlo8v9f0wFHmuZ1HrZEuaXF4M4EiLR-TBDK7Vh73ZrrC06Eiq86EWWFXROtmJBBy9qbxOr39DeG-GIe-RWQ_QDZ0Xhu2jLjvDA6lu79Hxo94s"/>
+<span class="font-headline-md text-headline-md font-bold text-text-primary dark:text-text-primary">CloudFRM</span>
+</a>
+<span class="hidden sm:inline text-outline-variant">|</span>
+<p class="font-body-sm text-body-sm text-text-muted dark:text-text-muted">
+          © 2025 CloudFRM Inc. Precision Neural Voice Synthetics. All rights reserved.
+        </p>
+</div>
+<!-- Links Cluster -->
+<div class="flex flex-wrap items-center justify-center gap-6">
+<a class="text-text-muted dark:text-text-muted font-medium hover:text-glow-cyan dark:hover:text-glow-cyan transition-colors duration-150 font-label-sm text-label-sm" href="#docs">Documentation</a>
+<a class="text-text-muted dark:text-text-muted font-medium hover:text-glow-cyan dark:hover:text-glow-cyan transition-colors duration-150 font-label-sm text-label-sm" href="#contracts">Smart Contracts</a>
+<a class="text-text-muted dark:text-text-muted font-medium hover:text-glow-cyan dark:hover:text-glow-cyan transition-colors duration-150 font-label-sm text-label-sm" href="#api">API Reference</a>
+<a class="text-text-muted dark:text-text-muted font-medium hover:text-glow-cyan dark:hover:text-glow-cyan transition-colors duration-150 font-label-sm text-label-sm" href="#terms">Terms of Service</a>
+<a class="text-text-muted dark:text-text-muted font-medium hover:text-glow-cyan dark:hover:text-glow-cyan transition-colors duration-150 font-label-sm text-label-sm" href="#security">Security Matrix</a>
+<a class="text-text-muted dark:text-text-muted font-medium hover:text-glow-cyan dark:hover:text-glow-cyan transition-colors duration-150 font-label-sm text-label-sm" href="#telemetry">System Telemetry</a>
+</div>
+</div>
+</footer>
+<!-- Micro-Interactions Script: Live Spectrum Waveform & Revenue Calculator -->
+<script src="/static/landing/scrollfilm.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // 2. Interactive Earnings Calculator
+      const minutesSlider = document.getElementById('minutesSlider');
+      const minutesDisplay = document.getElementById('minutesDisplay');
+      const payoutUsd = document.getElementById('payoutUsd');
+      const payoutCrypto = document.getElementById('payoutCrypto');
+      const tierBtns = document.querySelectorAll('.tier-btn');
+      
+      let rateMultiplier = 0.15; // default commercial tier
+
+      const updateCalculation = () => {
+        const mins = parseInt(minutesSlider.value, 10);
+        minutesDisplay.textContent = `${mins.toLocaleString()} min`;
+        
+        const gross = mins * rateMultiplier;
+        const netCreator = gross * 0.95; // 95% creator retention
+        const ethPrice = 2500;
+        const ethEquivalent = (netCreator / ethPrice).toFixed(2);
+
+        payoutUsd.textContent = `$${Math.round(netCreator).toLocaleString()}`;
+        payoutCrypto.textContent = `≈ ${ethEquivalent} ETH / cycle`;
+      };
+
+      minutesSlider.addEventListener('input', updateCalculation);
+
+      tierBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          tierBtns.forEach(b => {
+            b.classList.remove('bg-primary-container/20', 'border-primary', 'text-primary');
+            b.classList.add('bg-surface-container-high', 'border-outline-variant/30', 'text-text-secondary');
+          });
+          btn.classList.add('bg-primary-container/20', 'border-primary', 'text-primary');
+          btn.classList.remove('bg-surface-container-high', 'border-outline-variant/30', 'text-text-secondary');
+
+          const tier = btn.getAttribute('data-tier');
+          if (tier === '1') rateMultiplier = 0.15; // Commercial
+          if (tier === '2') rateMultiplier = 0.08; // Game NPC
+          if (tier === '3') rateMultiplier = 0.28; // Enterprise Agent
+          updateCalculation();
+        });
+      });
+
+      // 3. Background Wave Canvas Simulation
+      const canvas = document.getElementById('bgSoundwaveCanvas');
+      if (canvas) {
+        const ctx = canvas.getContext('2d');
+        let width = (canvas.width = window.innerWidth);
+        let height = (canvas.height = window.innerHeight);
+
+        window.addEventListener('resize', () => {
+          width = canvas.width = window.innerWidth;
+          height = canvas.height = window.innerHeight;
+        });
+
+        let step = 0;
+        function draw() {
+          ctx.clearRect(0, 0, width, height);
+          step += 0.015;
+
+          for (let j = 0; j < 3; j++) {
+            ctx.beginPath();
+            ctx.lineWidth = 1.5;
+            ctx.strokeStyle = j === 0 ? 'rgba(30, 198, 182, 0.25)' : j === 1 ? 'rgba(0, 136, 255, 0.2)' : 'rgba(0, 240, 255, 0.15)';
+            
+            const yOffset = height * 0.45 + j * 60;
+            ctx.moveTo(0, yOffset);
+
+            for (let x = 0; x < width; x += 10) {
+              const y = yOffset + Math.sin(x * 0.003 + step + j * 1.5) * 55 * Math.sin(x * 0.001 + step * 0.5);
+              ctx.lineTo(x, y);
+            }
+            ctx.stroke();
+          }
+          requestAnimationFrame(draw);
+        }
+        draw();
+      }
+    });
+  </script>
+</body></html>

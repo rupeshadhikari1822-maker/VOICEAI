@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>CloudFRM — Neural Platform Authentication</title>
+<!-- Google Fonts & Material Symbols -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Manrope:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700;800&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@100..900&family=Manrope:wght@100..900&family=Space+Grotesk:wght@100..900&display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "inverse-on-surface": "#233336",
+            "on-surface": "#d4e6ea",
+            "secondary": "#a8c8ff",
+            "secondary-fixed": "#d5e3ff",
+            "surface-glass": "rgba(6, 26, 30, 0.65)",
+            "text-primary": "#F0FBFA",
+            "surface-bright": "#2c3c3f",
+            "glow-cyan": "#00F0FF",
+            "on-primary-container": "#004d46",
+            "text-muted": "#3A6367",
+            "inverse-primary": "#006a61",
+            "on-primary": "#003732",
+            "on-secondary-fixed": "#001b3c",
+            "surface-dim": "#061619",
+            "error-container": "#93000a",
+            "tertiary": "#99d8da",
+            "error": "#ffb4ab",
+            "surface-container-high": "#1d2c30",
+            "surface-container-lowest": "#021013",
+            "surface-container-highest": "#28373b",
+            "text-secondary": "#8AAEB1",
+            "on-tertiary": "#003738",
+            "on-secondary": "#003061",
+            "surface-base": "#020B0D",
+            "on-background": "#d4e6ea",
+            "on-primary-fixed-variant": "#005049",
+            "surface-variant": "#28373b",
+            "surface": "#061619",
+            "on-secondary-container": "#002955",
+            "surface-container-low": "#0e1e21",
+            "primary-fixed": "#68f9e7",
+            "outline": "#859491",
+            "outline-variant": "#3c4947",
+            "glow-teal": "#1EC6B6",
+            "secondary-fixed-dim": "#a8c8ff",
+            "background": "#061619",
+            "on-secondary-fixed-variant": "#004689",
+            "on-tertiary-fixed": "#002021",
+            "tertiary-fixed": "#aeeeef",
+            "on-tertiary-container": "#004c4e",
+            "on-tertiary-fixed-variant": "#004f51",
+            "primary-container": "#1ec6b6",
+            "surface-overlay": "#061A1E",
+            "glow-azure": "#1A6BFF",
+            "border-glass": "rgba(30, 198, 182, 0.22)",
+            "tertiary-fixed-dim": "#93d1d3",
+            "secondary-container": "#3491ff",
+            "on-primary-fixed": "#00201d",
+            "on-error-container": "#ffdad6",
+            "primary": "#4de2d2",
+            "primary-fixed-dim": "#44dccb",
+            "surface-tint": "#44dccb",
+            "surface-container": "#122225",
+            "on-error": "#690005",
+            "on-surface-variant": "#bbcac6",
+            "tertiary-container": "#7ebcbe",
+            "inverse-surface": "#d4e6ea"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+          "spacing": {
+            "sm": "0.75rem",
+            "xxs": "0.25rem",
+            "2xl": "3rem",
+            "md": "1rem",
+            "3xl": "4rem",
+            "margin-desktop": "3rem",
+            "xs": "0.5rem",
+            "xl": "2rem",
+            "lg": "1.5rem",
+            "margin-tablet": "2rem",
+            "margin-mobile": "1rem",
+            "gutter-mobile": "1rem",
+            "gutter-tablet": "1.5rem",
+            "gutter-desktop": "2rem"
+          },
+          "fontFamily": {
+            "body-md": ["Manrope"],
+            "label-sm": ["JetBrains Mono"],
+            "headline-xl": ["Space Grotesk"],
+            "body-lg": ["Manrope"],
+            "headline-lg": ["Space Grotesk"],
+            "headline-md": ["Space Grotesk"],
+            "headline-xl-mobile": ["Space Grotesk"],
+            "body-sm": ["Manrope"],
+            "label-md": ["JetBrains Mono"],
+            "label-lg": ["JetBrains Mono"],
+            "headline-lg-mobile": ["Space Grotesk"],
+            "headline-sm": ["Space Grotesk"]
+          },
+          "fontSize": {
+            "body-md": ["15px", { "lineHeight": "24px", "fontWeight": "400" }],
+            "label-sm": ["10px", { "lineHeight": "14px", "letterSpacing": "0.06em", "fontWeight": "600" }],
+            "headline-xl": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+            "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+            "headline-lg": ["36px", { "lineHeight": "44px", "letterSpacing": "-0.015em", "fontWeight": "600" }],
+            "headline-md": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+            "headline-xl-mobile": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "700" }],
+            "body-sm": ["13px", { "lineHeight": "20px", "fontWeight": "400" }],
+            "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.04em", "fontWeight": "500" }],
+            "label-lg": ["14px", { "lineHeight": "20px", "letterSpacing": "0.02em", "fontWeight": "500" }],
+            "headline-lg-mobile": ["26px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+            "headline-sm": ["20px", { "lineHeight": "28px", "fontWeight": "500" }]
+          }
+        },
+      },
+    }
+  </script>
+<style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      display: inline-block;
+      vertical-align: middle;
+      line-height: 1;
+    }
+    .specular-card {
+      box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.12), 0 20px 50px rgba(0, 0, 0, 0.6);
+    }
+    .specular-border {
+      border: 1px solid rgba(30, 198, 182, 0.18);
+    }
+    .glow-cyan-filter {
+      filter: drop-shadow(0 0 14px rgba(30, 198, 182, 0.45));
+    }
+    @keyframes pulse-slow {
+      0%, 100% { opacity: 0.9; transform: scaleY(1); }
+      50% { opacity: 0.45; transform: scaleY(0.65); }
+    }
+    .animate-wave-bar {
+      animation: pulse-slow 1.6s ease-in-out infinite;
+    }
+  </style>
+</head>
+<body class="bg-surface-base text-text-primary min-h-screen relative overflow-x-hidden selection:bg-primary-container selection:text-on-primary-container flex flex-col justify-between font-body-md text-body-md">
+<!-- Atmospheric Background Glow Nodes -->
+<div class="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+<div class="absolute -top-40 left-1/2 -translate-x-1/2 w-[900px] h-[500px] bg-primary/10 rounded-full blur-[140px]"></div>
+<div class="absolute top-1/3 -left-32 w-[600px] h-[600px] bg-glow-azure/10 rounded-full blur-[160px]"></div>
+<div class="absolute -bottom-20 right-0 w-[550px] h-[550px] bg-primary-container/10 rounded-full blur-[130px]"></div>
+<!-- Subtle Grid Overlay -->
+<div class="absolute inset-0 opacity-[0.03] bg-[radial-gradient(#1EC6B6_1px,transparent_1px)] [background-size:24px_24px]"></div>
+</div>
+<!-- Shared Top Floating Navigation Bar (Based on TopNavBar Blueprint) -->
+<header class="fixed top-4 left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] max-w-7xl rounded-xl z-50 bg-surface-glass backdrop-blur-md border border-outline-variant/30 shadow-2xl shadow-surface-base/80">
+<div class="flex items-center justify-between px-6 py-3 w-full">
+<!-- Brand Logo -->
+<a class="flex items-center gap-3 group" href="/">
+<div class="w-9 h-9 rounded-lg bg-surface-container-lowest border border-primary/30 flex items-center justify-center relative overflow-hidden group-hover:border-primary transition-colors">
+<img alt="CloudFRM" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDToyfM7pWi7wgyb5cL7vaEVwKgtC9wc_VHlPlaIvEa3YDEQctY2fb4LoIViHpTek5G_MVSWvW1hTpm9uncqzeGV_PVxvGGRCiNLRglLK2f9SjRILhRcs-zmXh9LnunY_SaY68sU2b0eOveLeIssf5zhkjHBGaAnZjPVs53VRMHsZAteGAfE7xMs8CCCjVWv71hOH03hs-fWnML5uR3leoR6moutC8XX75eBxeBZrr294oPs1fHE585aFyeChsRGmYznJk"/>
+</div>
+<span class="font-headline-md text-headline-md font-bold tracking-tight text-text-primary group-hover:text-primary transition-colors">
+          CloudFRM<span class="text-glow-cyan font-light">.ai</span>
+</span>
+</a>
+<!-- Desktop Nav Links -->
+<nav class="hidden md:flex items-center gap-8">
+<a class="text-text-secondary font-medium hover:text-primary transition-colors duration-200" href="/#platform">Platform</a>
+<a class="text-text-secondary font-medium hover:text-primary transition-colors duration-200" href="/#pipeline">Neural Pipeline</a>
+<a class="text-text-secondary font-medium hover:text-primary transition-colors duration-200" href="/#monetization">Monetization</a>
+<a class="text-text-secondary font-medium hover:text-primary transition-colors duration-200" href="/#developers">Developers</a>
+</nav>
+<!-- Trailing Action -->
+<div class="flex items-center gap-4">
+<a class="hidden sm:inline-flex items-center gap-1.5 font-label-md text-label-md text-text-secondary hover:text-primary transition-colors duration-200" href="/">
+<span class="material-symbols-outlined text-[16px]">arrow_back</span>
+<span>Back to Portal</span>
+</a>
+<a class="font-label-md text-label-md px-4 py-2 rounded-lg bg-primary-container text-surface-base font-semibold transition-all duration-200 hover:brightness-110 active:scale-95 shadow-[0_0_16px_rgba(30,198,182,0.35)]" href="/studio">
+          Launch Studio
+        </a>
+</div>
+</div>
+</header>
+<!-- Main Authentication Canvas -->
+<main class="relative z-10 flex-grow pt-28 pb-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full flex items-center justify-center">
+<div class="w-full grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+<!-- Left Column: Immersive Brand & Acoustic Intelligence Telemetry -->
+<div class="lg:col-span-6 flex flex-col justify-center space-y-6">
+<!-- Live Node Pill -->
+<div class="inline-flex items-center gap-2.5 px-3 py-1.5 rounded-full bg-surface-container-high/60 border border-primary/25 backdrop-blur-md self-start">
+<span class="relative flex h-2 w-2">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+<span class="relative inline-flex rounded-full h-2 w-2 bg-glow-teal"></span>
+</span>
+<span class="font-label-sm text-label-sm text-primary tracking-wider uppercase">NODE CLUSTER 04 • ZERO DRIFT SYNTHESIS</span>
+</div>
+<div class="space-y-3">
+<h1 class="font-headline-xl text-headline-xl font-bold tracking-tight text-text-primary leading-tight">
+            Next-Gen Neural Voice <br/>
+<span class="bg-gradient-to-r from-glow-teal via-glow-cyan to-secondary-container bg-clip-text text-transparent">Sovereignty & Studio</span>
+</h1>
+<p class="font-body-lg text-body-lg text-text-secondary max-w-xl">
+            Access enterprise ultra-low latency voice clones, non-custodial smart licensing, and zero-shot voice cloning matrix on CloudFRM.
+          </p>
+</div>
+<!-- Telemetry Glass Slab -->
+<div class="specular-card specular-border bg-surface-overlay/70 backdrop-blur-xl rounded-xl p-5 relative overflow-hidden group">
+<div class="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-secondary-container via-glow-teal to-transparent"></div>
+<div class="flex items-center justify-between pb-3 border-b border-outline-variant/30">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-glow-cyan text-[20px]">graphic_eq</span>
+<div>
+<div class="font-label-md text-label-md text-text-primary font-semibold">Active Synth: FRM-NEO-V4</div>
+<div class="font-label-sm text-label-sm text-text-muted">Verified Acoustic Identity • 99.98% Fidelity</div>
+</div>
+</div>
+<span class="px-2 py-0.5 rounded bg-primary-container/10 border border-primary/30 text-primary font-label-sm text-label-sm">US-EAST-ACCEL</span>
+</div>
+<!-- Waveform Visualizer Preview -->
+<div class="py-4">
+<div class="flex items-end justify-between gap-1 h-12 px-1">
+<div class="w-1.5 bg-glow-teal/40 rounded-full animate-wave-bar h-4" style="animation-delay: 0.1s"></div>
+<div class="w-1.5 bg-glow-teal/60 rounded-full animate-wave-bar h-8" style="animation-delay: 0.3s"></div>
+<div class="w-1.5 bg-glow-cyan rounded-full animate-wave-bar h-11" style="animation-delay: 0.5s"></div>
+<div class="w-1.5 bg-glow-teal rounded-full animate-wave-bar h-7" style="animation-delay: 0.2s"></div>
+<div class="w-1.5 bg-primary rounded-full animate-wave-bar h-9" style="animation-delay: 0.6s"></div>
+<div class="w-1.5 bg-secondary-container rounded-full animate-wave-bar h-12" style="animation-delay: 0.4s"></div>
+<div class="w-1.5 bg-glow-cyan rounded-full animate-wave-bar h-6" style="animation-delay: 0.15s"></div>
+<div class="w-1.5 bg-glow-teal rounded-full animate-wave-bar h-10" style="animation-delay: 0.35s"></div>
+<div class="w-1.5 bg-glow-teal/70 rounded-full animate-wave-bar h-8" style="animation-delay: 0.7s"></div>
+<div class="w-1.5 bg-glow-cyan rounded-full animate-wave-bar h-12" style="animation-delay: 0.25s"></div>
+<div class="w-1.5 bg-secondary-container rounded-full animate-wave-bar h-7" style="animation-delay: 0.45s"></div>
+<div class="w-1.5 bg-primary rounded-full animate-wave-bar h-5" style="animation-delay: 0.1s"></div>
+<div class="w-1.5 bg-glow-teal/50 rounded-full animate-wave-bar h-3" style="animation-delay: 0.55s"></div>
+</div>
+</div>
+<!-- Feature Bullets Grid -->
+<div class="grid grid-cols-2 gap-3 pt-3 border-t border-outline-variant/30 text-text-secondary">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[18px]">verified_user</span>
+<span class="font-body-sm text-body-sm">SHA-256 Watermarking</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[18px]">bolt</span>
+<span class="font-body-sm text-body-sm">38ms Streaming Latency</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[18px]">account_balance_wallet</span>
+<span class="font-body-sm text-body-sm">Automated Voice Royalties</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[18px]">lock</span>
+<span class="font-body-sm text-body-sm">Non-Custodial Sovereignty</span>
+</div>
+</div>
+</div>
+<!-- System Security Pill Array -->
+<div class="flex flex-wrap items-center gap-3 pt-2">
+<span class="px-2.5 py-1 rounded-md bg-surface-container-high/40 border border-outline-variant/30 font-label-sm text-label-sm text-text-muted flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[14px] text-primary">shield</span> SOC2 Type II Certified
+          </span>
+<span class="px-2.5 py-1 rounded-md bg-surface-container-high/40 border border-outline-variant/30 font-label-sm text-label-sm text-text-muted flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[14px] text-primary">enhanced_encryption</span> 256-Bit TLS End-to-End
+          </span>
+<span class="px-2.5 py-1 rounded-md bg-surface-container-high/40 border border-outline-variant/30 font-label-sm text-label-sm text-text-muted flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[14px] text-primary">token</span> Sovereign AI License
+          </span>
+</div>
+</div>
+<!-- Right Column: State-of-the-art Unified Auth Glass Box -->
+<div class="lg:col-span-6 w-full max-w-lg mx-auto">
+<div class="specular-card specular-border bg-surface-overlay/85 backdrop-blur-2xl rounded-2xl p-6 sm:p-8 relative shadow-2xl">
+<!-- Top Specular Neon Strip -->
+<div class="absolute top-0 left-8 right-8 h-[1px] bg-gradient-to-r from-transparent via-glow-teal/80 to-transparent"></div>
+<!-- Auth Mode Toggle (Sign In vs Create Account) -->
+<div class="p-1 rounded-xl bg-surface-container-lowest/80 border border-outline-variant/40 flex items-center mb-6">
+<button class="flex-1 py-2 rounded-lg font-label-md text-label-md font-semibold transition-all duration-200 bg-surface-container-high text-primary shadow-inner" id="tab-signin-btn" type="button">
+              Sign In
+            </button>
+<button class="flex-1 py-2 rounded-lg font-label-md text-label-md font-medium text-text-secondary hover:text-text-primary transition-all duration-200" id="tab-signup-btn" type="button">
+              Create Account
+            </button>
+</div>
+<!-- Form Header -->
+<div class="mb-6">
+<h2 class="font-headline-md text-headline-md text-text-primary font-bold tracking-tight" id="auth-title">
+              Welcome back to Voice Studio
+            </h2>
+<p class="font-body-sm text-body-sm text-text-secondary mt-1" id="auth-subtitle">
+              Enter credentials to connect your synthetic voice models.
+            </p>
+</div>
+<p class="font-body-sm text-body-sm mb-4 hidden" id="auth-status"></p>
+<!-- Social Authentication: Sleek Dark Glass Google Button -->
+<button class="w-full flex items-center justify-center gap-3 py-3 px-4 rounded-xl bg-surface-container-low/70 hover:bg-surface-container-high/80 border border-border-glass hover:border-glow-cyan text-text-primary font-label-md text-label-md transition-all duration-200 group active:scale-[0.99] shadow-md" id="auth-google-btn" type="button">
+<svg class="w-4 h-4 transition-transform group-hover:scale-110" viewbox="0 0 24 24">
+<path d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z" fill="#4285F4"></path>
+<path d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.33 24 12 24z" fill="#34A853"></path>
+<path d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 9.99 0 12s.45 3.82 1.25 5.42l4.03-3.15z" fill="#FBBC05"></path>
+<path d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z" fill="#EA4335"></path>
+</svg>
+<span class="tracking-wide">Continue with Google</span>
+</button>
+<!-- Divider -->
+<div class="relative my-6 flex items-center justify-center">
+<div class="absolute inset-0 flex items-center">
+<div class="w-full border-t border-outline-variant/30"></div>
+</div>
+<span class="relative px-3 bg-surface-overlay font-label-sm text-label-sm text-text-muted uppercase tracking-wider">or continue with email</span>
+</div>
+<!-- SIGN IN FORM -->
+<form class="space-y-4" id="signin-form">
+<div>
+<label class="block font-label-sm text-label-sm font-medium text-text-secondary mb-1.5" for="signin-email">CREATOR / STUDIO EMAIL</label>
+<div class="relative rounded-lg">
+<div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-text-muted">
+<span class="material-symbols-outlined text-[18px]">alternate_email</span>
+</div>
+<input class="w-full pl-10 pr-4 py-2.5 bg-surface-container-lowest/80 border border-outline-variant/40 rounded-lg text-text-primary placeholder-text-muted font-body-sm text-body-sm focus:outline-none focus:border-glow-cyan focus:ring-1 focus:ring-glow-cyan transition-all" id="signin-email" placeholder="director@studio.ai" required="" type="email"/>
+</div>
+</div>
+<div>
+<div class="flex items-center justify-between mb-1.5">
+<label class="block font-label-sm text-label-sm font-medium text-text-secondary" for="signin-password">PASSWORD</label>
+<a class="font-label-sm text-label-sm text-primary hover:text-glow-cyan transition-colors" href="#">Forgot password?</a>
+</div>
+<div class="relative rounded-lg">
+<div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-text-muted">
+<span class="material-symbols-outlined text-[18px]">lock_clock</span>
+</div>
+<input class="w-full pl-10 pr-10 py-2.5 bg-surface-container-lowest/80 border border-outline-variant/40 rounded-lg text-text-primary placeholder-text-muted font-body-sm text-body-sm focus:outline-none focus:border-glow-cyan focus:ring-1 focus:ring-glow-cyan transition-all" id="signin-password" placeholder="••••••••••••" required="" type="password"/>
+<button class="absolute inset-y-0 right-0 pr-3 flex items-center text-text-muted hover:text-text-primary transition-colors" data-toggle-password="signin-password" type="button">
+<span class="material-symbols-outlined text-[18px]">visibility</span>
+</button>
+</div>
+</div>
+<div class="flex items-center justify-between pt-1">
+<label class="flex items-center gap-2 cursor-pointer">
+<input checked="" class="w-4 h-4 rounded bg-surface-container-lowest border-outline-variant/60 text-primary focus:ring-primary focus:ring-offset-0 focus:ring-1 cursor-pointer" type="checkbox"/>
+<span class="font-body-sm text-body-sm text-text-secondary select-none">Remember 30-day session</span>
+</label>
+<span class="font-label-sm text-label-sm text-primary/80 flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">format_image_left</span> TLS Valid
+              </span>
+</div>
+<button class="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-glow-teal via-primary to-glow-azure text-surface-base font-headline-sm text-headline-sm font-bold tracking-tight shadow-[0_0_20px_rgba(30,198,182,0.4)] hover:shadow-[0_0_28px_rgba(0,240,255,0.6)] hover:brightness-110 active:scale-[0.98] transition-all duration-200 mt-2" type="submit">
+              Launch Voice Studio
+            </button>
+</form>
+<!-- SIGN UP FORM (Initially Hidden) -->
+<form class="space-y-4 hidden" id="signup-form">
+<div>
+<label class="block font-label-sm text-label-sm font-medium text-text-secondary mb-1.5" for="signup-name">LEGAL / CREATOR FULL NAME</label>
+<div class="relative rounded-lg">
+<div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-text-muted">
+<span class="material-symbols-outlined text-[18px]">person</span>
+</div>
+<input class="w-full pl-10 pr-4 py-2.5 bg-surface-container-lowest/80 border border-outline-variant/40 rounded-lg text-text-primary placeholder-text-muted font-body-sm text-body-sm focus:outline-none focus:border-glow-cyan focus:ring-1 focus:ring-glow-cyan transition-all" id="signup-name" placeholder="Elena Vance" type="text"/>
+</div>
+</div>
+<div>
+<label class="block font-label-sm text-label-sm font-medium text-text-secondary mb-1.5" for="signup-email">STUDIO OR ENTERPRISE EMAIL</label>
+<div class="relative rounded-lg">
+<div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-text-muted">
+<span class="material-symbols-outlined text-[18px]">mail</span>
+</div>
+<input class="w-full pl-10 pr-4 py-2.5 bg-surface-container-lowest/80 border border-outline-variant/40 rounded-lg text-text-primary placeholder-text-muted font-body-sm text-body-sm focus:outline-none focus:border-glow-cyan focus:ring-1 focus:ring-glow-cyan transition-all" id="signup-email" placeholder="elena@cloudfrm.studio" type="email"/>
+</div>
+</div>
+<div>
+<label class="block font-label-sm text-label-sm font-medium text-text-secondary mb-1.5" for="signup-password">CRYPTOGRAPHIC PASSPHRASE</label>
+<div class="relative rounded-lg">
+<div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-text-muted">
+<span class="material-symbols-outlined text-[18px]">key</span>
+</div>
+<input class="w-full pl-10 pr-10 py-2.5 bg-surface-container-lowest/80 border border-outline-variant/40 rounded-lg text-text-primary placeholder-text-muted font-body-sm text-body-sm focus:outline-none focus:border-glow-cyan focus:ring-1 focus:ring-glow-cyan transition-all" id="signup-password" placeholder="Create high-entropy password" type="password"/>
+<button class="absolute inset-y-0 right-0 pr-3 flex items-center text-text-muted hover:text-text-primary transition-colors" data-toggle-password="signup-password" type="button">
+<span class="material-symbols-outlined text-[18px]">visibility</span>
+</button>
+</div>
+<!-- Security Entropy Meter -->
+<div class="mt-2.5 space-y-1.5">
+<div class="flex items-center justify-between font-label-sm text-label-sm">
+<span class="text-text-secondary">ENTROPY STRENGTH</span>
+<span class="text-glow-teal font-semibold" id="entropy-label">256-BIT OPTIMAL</span>
+</div>
+<div class="grid grid-cols-4 gap-1.5 h-1.5">
+<div class="rounded-full bg-primary h-full" id="bar-1"></div>
+<div class="rounded-full bg-primary h-full" id="bar-2"></div>
+<div class="rounded-full bg-glow-cyan h-full" id="bar-3"></div>
+<div class="rounded-full bg-surface-container-highest h-full" id="bar-4"></div>
+</div>
+</div>
+</div>
+<div class="pt-1">
+<label class="flex items-start gap-2.5 cursor-pointer">
+<input class="mt-1 w-4 h-4 rounded bg-surface-container-lowest border-outline-variant/60 text-primary focus:ring-primary focus:ring-offset-0 focus:ring-1 cursor-pointer" required="" type="checkbox"/>
+<span class="font-body-sm text-body-sm text-text-secondary select-none leading-tight">
+                  I agree to the <a class="text-primary hover:underline" href="#">Synthetic Voice Royalty Protocol</a> and <a class="text-primary hover:underline" href="#">CloudFRM Biometric Sovereignty Agreement</a>.
+                </span>
+</label>
+</div>
+<button class="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-glow-teal via-primary to-glow-azure text-surface-base font-headline-sm text-headline-sm font-bold tracking-tight shadow-[0_0_20px_rgba(30,198,182,0.4)] hover:shadow-[0_0_28px_rgba(0,240,255,0.6)] hover:brightness-110 active:scale-[0.98] transition-all duration-200 mt-2" type="submit">
+              Generate Neural Identity
+            </button>
+</form>
+</div>
+</div>
+</div>
+</main>
+<!-- Shared Footer Component (Exact blueprint transcription) -->
+<footer class="w-full rounded-t-2xl border-t border-outline-variant/20 shadow-inner bg-surface-container-lowest/80 backdrop-blur-xl relative z-10">
+<div class="max-w-7xl mx-auto px-6 py-12 flex flex-col md:flex-row justify-between items-center gap-6 w-full">
+<div class="flex flex-col sm:flex-row items-center gap-3">
+<span class="font-headline-md text-headline-md font-bold text-text-primary">CloudFRM</span>
+<span class="hidden sm:inline text-text-muted">•</span>
+<span class="font-body-sm text-body-sm text-text-muted">© 2025 CloudFRM Inc. Precision Neural Voice Synthetics. All rights reserved.</span>
+</div>
+<div class="flex flex-wrap items-center justify-center gap-6 font-body-sm text-body-sm">
+<a class="text-text-muted font-medium hover:text-glow-cyan transition-colors duration-150" href="#">Documentation</a>
+<a class="text-text-muted font-medium hover:text-glow-cyan transition-colors duration-150" href="#">Smart Contracts</a>
+<a class="text-text-muted font-medium hover:text-glow-cyan transition-colors duration-150" href="#">API Reference</a>
+<a class="text-text-muted font-medium hover:text-glow-cyan transition-colors duration-150" href="#">Terms of Service</a>
+<a class="text-text-muted font-medium hover:text-glow-cyan transition-colors duration-150" href="#">Security Matrix</a>
+<a class="text-text-muted font-medium hover:text-glow-cyan transition-colors duration-150" href="#">System Telemetry</a>
+</div>
+</div>
+</footer>
+<script type="module" src="/static/auth/login.js"></script>
+</body></html>
